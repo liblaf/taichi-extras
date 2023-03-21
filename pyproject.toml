@@ -1,0 +1,18 @@
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
+
+[tool.poetry]
+authors = ["Qin Li <liblaf@outlook.com>"]
+description = ""
+name = "taichi-extras"
+packages = [{ include = "taichi_extras" }]
+readme = "README.md"
+version = "0.0.0"
+
+[tool.poetry.dependencies]
+meshio = { extras = ["all"], version = "^5.3.4" }
+python = ">=3.10,<3.11"
+pyvista = { extras = ["all"], version = "^0.38.5" }
+taichi = "^1.4.1"
+typer = { extras = ["all"], version = "^0.7.0" }
