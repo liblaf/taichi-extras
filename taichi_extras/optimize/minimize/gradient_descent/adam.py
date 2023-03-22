@@ -2,7 +2,7 @@ import typing
 
 import taichi as ti
 
-from taichi_extras.utils.like import like
+from taichi_extras.utils.field.like import field_like
 
 
 class Adam:
@@ -36,8 +36,8 @@ class Adam:
         self.epsilon = epsilon
         self.eta = eta
 
-        self.m = tuple(like(_x, needs_grad=False) for _x in x)
-        self.v = tuple(like(_x, needs_grad=False) for _x in x)
+        self.m = tuple(field_like(_x, needs_grad=False) for _x in x)
+        self.v = tuple(field_like(_x, needs_grad=False) for _x in x)
 
     def run(
         self,

@@ -5,11 +5,7 @@ import taichi as ti
 import typer
 
 from taichi_extras.mesh.obj import read_obj, write_obj
-from taichi_extras.spatial.transform import (
-    get_matrix,
-    inverse_transform_mesh,
-    transform_mesh,
-)
+from taichi_extras.spatial import transform as tie_transform
 
 ti.init()
 
@@ -51,16 +47,16 @@ def main(
         np_faces=np_input_faces,
     )
     params = np.loadtxt(transform_filepath)
-    transform, displacement = get_matrix(params=params)
+    transform, displacement = tie_transform.to_matrix(params=params)
     if inverse:
-        inverse_transform_mesh(
+        tie_transform.inverse_transform_mesh(
             transform=transform,
             displacement=displacement,
             input_points=input_points,
             output_points=output_points,
         )
     else:
-        transform_mesh(
+        tie_transform.transform_mesh(
             transform=transform,
             displacement=displacement,
             input_points=input_points,

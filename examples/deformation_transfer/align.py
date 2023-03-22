@@ -6,6 +6,7 @@ import typer
 
 from taichi_extras.mesh.obj import read_obj
 from taichi_extras.optimize.minimize.gradient_descent.adam import Adam
+from taichi_extras.spatial import transform as tie_transform
 
 ti.init()
 
@@ -18,13 +19,13 @@ output_points: ti.MatrixField
 faces: ti.MatrixField
 
 
-params: ti.ScalarField = ti.field(dtype=float, shape=9, needs_grad=True)
 transform: ti.MatrixField = ti.Matrix.field(
     n=3, m=3, dtype=float, shape=(), needs_grad=True
 )
 displacement: ti.MatrixField = ti.Vector.field(
     n=3, dtype=float, shape=(), needs_grad=True
 )
+
 
 loss: ti.ScalarField = ti.field(dtype=float, shape=(), needs_grad=True)
 
@@ -46,6 +47,12 @@ def init_fields(
     output_points = ti.Vector.field(n=3, dtype=float, shape=num_points, needs_grad=True)
 
 
+@ti.kernel
+def init_params():
+    transform[None] = ti.math.eye(3)
+    displacement[None].fill(0)
+
+
 @ti.func
 def compute_shape(
     points: ti.template(), faces: ti.template(), face_idx: int
@@ -57,18 +64,6 @@ def compute_shape(
 
 
 @ti.kernel
-def compute_transformation():
-    transform[None] = ti.Matrix(
-        arr=[
-            [params[0], params[1], params[2]],
-            [params[3], params[4], params[5]],
-            [params[6], params[7], params[8]],
-        ]
-    )
-    displacement[None] = ti.Vector(arr=[params[9], params[10], params[11]])
-
-
-@ti.kernel
 def compute_loss():
     for i in range(num_points):
         output_points[i] = transform[None] @ source_points[i] + displacement[None]
@@ -76,11 +71,6 @@ def compute_loss():
         output_shape = compute_shape(points=output_points, faces=faces, face_idx=i)
         target_shape = compute_shape(points=target_points, faces=faces, face_idx=i)
         loss[None] += (output_shape - target_shape).norm()
-
-
-def loss_fn():
-    compute_transformation()
-    compute_loss()
 
 
 def main(
@@ -103,18 +93,18 @@ def main(
         np_faces=source_faces,
     )
 
-    params[0] = 1.0
-    params[4] = 1.0
-    params[8] = 1.0
-    adam = Adam(loss_fn=loss_fn, loss=loss, x=(params,))
+    init_params()
+    adam = Adam(loss_fn=compute_loss, loss=loss, x=(transform, displacement))
 
     try:
         adam.run(iters=iters)
     except KeyboardInterrupt:
         pass
     finally:
-        compute_transformation()
-        np.savetxt(output_filepath, np.reshape(params.to_numpy(), newshape=(-1,)))
+        params: np.ndarray = tie_transform.to_numpy(
+            transform=transform[None], displacement=displacement[None]
+        )
+        np.savetxt(output_filepath, params)
 
 
 if __name__ == "__main__":

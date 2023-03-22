@@ -1,7 +1,7 @@
 import taichi as ti
 
 
-def like(
+def field_like(
     x: ti.ScalarField | ti.MatrixField,
     needs_grad: bool = False,
     needs_dual: bool = False,
