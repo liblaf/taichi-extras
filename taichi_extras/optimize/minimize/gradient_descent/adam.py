@@ -2,25 +2,27 @@ import typing
 
 import taichi as ti
 
+from taichi_extras.utils.like import like
+
 
 class Adam:
-    loss_fn: typing.Callable
+    loss_fn: typing.Callable[[], None]
 
     beta_1: float
     beta_2: float
     epsilon: float
     eta: float
 
-    m: ti.MatrixField
-    v: ti.MatrixField
-    x: ti.MatrixField
+    m: tuple[ti.ScalarField | ti.MatrixField, ...]
+    v: tuple[ti.ScalarField | ti.MatrixField, ...]
+    x: tuple[ti.ScalarField | ti.MatrixField, ...]
     loss: ti.ScalarField
 
     def __init__(
         self,
         loss_fn: typing.Callable,
         loss: ti.ScalarField,
-        x: ti.MatrixField,
+        x: tuple[ti.ScalarField | ti.MatrixField, ...],
         beta_1: float = 0.9,
         beta_2: float = 0.999,
         epsilon: float = 1e-8,
@@ -34,8 +36,8 @@ class Adam:
         self.epsilon = epsilon
         self.eta = eta
 
-        self.m = ti.Vector.field(n=x.n, dtype=x.dtype, shape=x.shape, needs_grad=False)
-        self.v = ti.Vector.field(n=x.n, dtype=x.dtype, shape=x.shape, needs_grad=False)
+        self.m = tuple(like(_x, needs_grad=False) for _x in x)
+        self.v = tuple(like(_x, needs_grad=False) for _x in x)
 
     def run(
         self,
@@ -44,14 +46,27 @@ class Adam:
         report_interval: int = 100,
         callback: typing.Optional[typing.Callable] = None,
     ) -> None:
-        @ti.kernel
+        gradient_descent_functions: list[typing.Callable[[int], None]] = list()
+        for i in range(len(self.x)):
+
+            @ti.kernel
+            def run(t: int):
+                for I in ti.grouped(ti.ndrange(*(self.x[i].shape))):
+                    self.m[i][I] = ti.math.mix(
+                        self.m[i][I], self.x[i].grad[I], self.beta_1
+                    )
+                    self.v[i][I] = ti.math.mix(
+                        self.v[i][I], self.x[i].grad[I] ** 2, self.beta_2
+                    )
+                    m_hat = self.m[i][I] / (1.0 - ti.pow(self.beta_1, t + 1))
+                    v_hat = self.v[i][I] / (1.0 - ti.pow(self.beta_2, t + 1))
+                    self.x[i][I] -= self.eta * m_hat / (ti.sqrt(v_hat) + self.epsilon)
+
+            gradient_descent_functions.append(run)
+
         def gradient_descent(t: int):
-            for i in range(self.x.shape[0]):
-                self.m[i] = ti.math.mix(self.m[i], self.x.grad[i], self.beta_1)
-                self.v[i] = ti.math.mix(self.v[i], self.x.grad[i] ** 2, self.beta_2)
-                m_hat = self.m[i] / (1.0 - ti.pow(self.beta_1, t + 1))
-                v_hat = self.v[i] / (1.0 - ti.pow(self.beta_2, t + 1))
-                self.x[i] -= self.eta * m_hat / (ti.sqrt(v_hat) + self.epsilon)
+            for i in range(len(self.x)):
+                gradient_descent_functions[i](t)
 
         for i in range(iter_start, iters):
             self.loss[None] = 0

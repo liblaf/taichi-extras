@@ -118,7 +118,7 @@ def main(
     adam = Adam(
         loss_fn=compute_loss,
         loss=loss,
-        x=output_points,
+        x=(output_points,),
         beta_1=beta_1,
         beta_2=beta_2,
         epsilon=epsilon,

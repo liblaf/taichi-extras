@@ -18,7 +18,7 @@ output_points: ti.MatrixField
 faces: ti.MatrixField
 
 
-params: ti.MatrixField = ti.Vector.field(n=1, dtype=float, shape=9, needs_grad=True)
+params: ti.ScalarField = ti.field(dtype=float, shape=9, needs_grad=True)
 transform: ti.MatrixField = ti.Matrix.field(
     n=3, m=3, dtype=float, shape=(), needs_grad=True
 )
@@ -60,12 +60,12 @@ def compute_shape(
 def compute_transformation():
     transform[None] = ti.Matrix(
         arr=[
-            [params[0][0], params[1][0], params[2][0]],
-            [params[3][0], params[4][0], params[5][0]],
-            [params[6][0], params[7][0], params[8][0]],
+            [params[0], params[1], params[2]],
+            [params[3], params[4], params[5]],
+            [params[6], params[7], params[8]],
         ]
     )
-    displacement[None] = ti.Vector(arr=[params[9][0], params[10][0], params[11][0]])
+    displacement[None] = ti.Vector(arr=[params[9], params[10], params[11]])
 
 
 @ti.kernel
@@ -103,10 +103,10 @@ def main(
         np_faces=source_faces,
     )
 
-    adam = Adam(loss_fn=loss_fn, loss=loss, x=params)
-    params[0][0] = 1.0
-    params[4][0] = 1.0
-    params[8][0] = 1.0
+    params[0] = 1.0
+    params[4] = 1.0
+    params[8] = 1.0
+    adam = Adam(loss_fn=loss_fn, loss=loss, x=(params,))
 
     try:
         adam.run(iters=iters)

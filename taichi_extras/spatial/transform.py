@@ -10,14 +10,14 @@ def get_matrix(params: np.ndarray) -> tuple[ti.math.mat3, ti.math.vec3]:
 
 @ti.func
 def transform_point(
-    transform: ti.template(), displacement: ti.template(), point: ti.math.vec3
+    transform: ti.template(), displacement: ti.template(), point: ti.template()
 ) -> ti.math.vec3:
     return transform @ point + displacement
 
 
 @ti.func
 def inverse_transform_point(
-    transform: ti.template(), displacement: ti.template(), point: ti.math.vec3
+    transform: ti.template(), displacement: ti.template(), point: ti.template()
 ) -> ti.math.vec3:
     return ti.math.inverse(transform) @ (point - displacement)
 
@@ -30,9 +30,9 @@ def transform_mesh(
 ):
     @ti.kernel
     def run():
-        for i in range(input_points.shape[0]):
-            output_points[i] = transform_point(
-                transform=transform, displacement=displacement, point=input_points[i]
+        for I in ti.grouped(ti.ndrange(*(input_points.shape))):
+            output_points[I] = transform_point(
+                transform=transform, displacement=displacement, point=input_points[I]
             )
 
     run()
@@ -46,9 +46,9 @@ def inverse_transform_mesh(
 ):
     @ti.kernel
     def run():
-        for i in range(input_points.shape[0]):
-            output_points[i] = inverse_transform_point(
-                transform=transform, displacement=displacement, point=input_points[i]
+        for I in ti.grouped(ti.ndrange(*(input_points.shape))):
+            output_points[I] = inverse_transform_point(
+                transform=transform, displacement=displacement, point=input_points[I]
             )
 
     run()
