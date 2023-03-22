@@ -55,7 +55,9 @@ def init_params():
 
 @ti.func
 def compute_shape(
-    points: ti.template(), faces: ti.template(), face_idx: int
+    points: ti.template(),  # type: ignore
+    faces: ti.template(),  # type: ignore
+    face_idx: int,
 ) -> ti.math.mat3:
     v1, v2, v3 = [points[i] for i in faces[face_idx]]
     cross = ti.math.cross(v2 - v1, v3 - v1)

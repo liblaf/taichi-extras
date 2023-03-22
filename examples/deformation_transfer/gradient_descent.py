@@ -45,7 +45,9 @@ def init_fields(
 
 @ti.func
 def compute_shape(
-    points: ti.template(), faces: ti.template(), face_idx: int
+    points: ti.template(),  # type: ignore
+    faces: ti.template(),  # type: ignore
+    face_idx: int,
 ) -> ti.Matrix:
     v1, v2, v3 = [points[i] for i in faces[face_idx]]
     cross = (v2 - v1).cross(v3 - v1)
@@ -55,16 +57,16 @@ def compute_shape(
 
 @ti.func
 def compute_transformation(
-    points: ti.template(),
-    points_deformed: ti.template(),
-    faces: ti.template(),
+    points: ti.template(),  # type: ignore
+    points_deformed: ti.template(),  # type: ignore
+    faces: ti.template(),  # type: ignore
     face_idx: int,
 ) -> ti.Matrix:
     shape = compute_shape(points=points, faces=faces, face_idx=face_idx)
     shape_deformed = compute_shape(
         points=points_deformed, faces=faces, face_idx=face_idx
     )
-    return shape_deformed @ shape.inverse()
+    return shape_deformed @ shape.inverse()  # type: ignore
 
 
 @ti.kernel

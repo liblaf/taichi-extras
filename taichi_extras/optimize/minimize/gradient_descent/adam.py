@@ -53,10 +53,14 @@ class Adam:
             def run(t: int):
                 for I in ti.grouped(ti.ndrange(*(self.x[i].shape))):
                     self.m[i][I] = ti.math.mix(
-                        self.m[i][I], self.x[i].grad[I], self.beta_1
+                        self.m[i][I],
+                        self.x[i].grad[I],  # type: ignore
+                        self.beta_1,
                     )
                     self.v[i][I] = ti.math.mix(
-                        self.v[i][I], self.x[i].grad[I] ** 2, self.beta_2
+                        self.v[i][I],
+                        self.x[i].grad[I] ** 2,  # type: ignore
+                        self.beta_2,
                     )
                     m_hat = self.m[i][I] / (1.0 - ti.pow(self.beta_1, t + 1))
                     v_hat = self.v[i][I] / (1.0 - ti.pow(self.beta_2, t + 1))
