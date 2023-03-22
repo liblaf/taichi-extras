@@ -1,5 +1,5 @@
 DATA    := $(CURDIR)/data
-TI_ARCH := x64 # cuda, vulkan, ...
+TI_ARCH := # x64, cuda, vulkan, ...
 
 # Adaptive Moment Estimation (Adam) params
 BETA_1  := 0.9
@@ -8,7 +8,11 @@ EPSILON := 1e-8
 ETA     := 1e-3
 ITERS   := 131072
 
-PYTHON           := env TI_ARCH=$(TI_ARCH) python
+ifeq ($(TI_ARCH),)
+  PYTHON := python
+else
+  PYTHON := env TI_ARCH=$(TI_ARCH) python
+endif
 GRADIENT_DESCENT := $(PYTHON) gradient_descent.py --beta-1 $(BETA_1) --beta-2 $(BETA_2) --epsilon $(EPSILON) --eta $(ETA) --iters $(ITERS)
 
 all: t1 u1
