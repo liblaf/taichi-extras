@@ -8,7 +8,7 @@ description = ""
 name = "taichi-extras"
 packages = [{ include = "taichi_extras" }]
 readme = "README.md"
-version = "0.0.0"
+version = "0.1.0"
 
 [tool.poetry.dependencies]
 meshio = { extras = ["all"], version = "^5.3.4" }
