@@ -1,3 +1,4 @@
+import datetime
 import typing
 
 import taichi as ti
@@ -46,6 +47,7 @@ class Adam:
         report_interval: int = 100,
         callback: typing.Optional[typing.Callable] = None,
     ) -> None:
+        start: datetime.datetime = datetime.datetime.now()
         gradient_descent_functions: list[typing.Callable[[int], None]] = list()
         for i in range(len(self.x)):
 
@@ -77,12 +79,18 @@ class Adam:
             with ti.ad.Tape(loss=self.loss):
                 self.loss_fn()
             if report_interval and i % report_interval == 0:
-                print(f"iter = {i},", f"loss = {self.loss[None]}")
+                end: datetime.datetime = datetime.datetime.now()
+                print(
+                    f"iter = {i},", f"loss = {self.loss[None]}", f"time = {end - start}"
+                )
             if callback:
                 if callback(i):
                     break
             gradient_descent(i)
         else:
-            print(f"iter = {iters},", f"loss = {self.loss[None]}")
+            end: datetime.datetime = datetime.datetime.now()
+            print(
+                f"iter = {iters},", f"loss = {self.loss[None]}", f"time = {end - start}"
+            )
             if callback:
                 callback(iters)
