@@ -8,7 +8,7 @@ from taichi_extras.mesh.obj import read_obj
 from taichi_extras.optimize.minimize.gradient_descent.adam import Adam
 from taichi_extras.spatial import transform as tie_transform
 
-ti.init()
+ti.init(kernel_profiler=True)
 
 
 num_points: int
@@ -107,6 +107,9 @@ def main(
             transform=transform[None], displacement=displacement[None]
         )
         np.savetxt(output_filepath, params)
+
+    ti.profiler.print_scoped_profiler_info()
+    ti.profiler.print_kernel_profiler_info()
 
 
 if __name__ == "__main__":

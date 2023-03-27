@@ -849,14 +849,14 @@ files = [
 
 [[package]]
 name = "imageio"
-version = "2.26.1"
+version = "2.27.0"
 description = "Library for reading and writing a wide range of image, video, scientific, and volumetric data formats."
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "imageio-2.26.1-py3-none-any.whl", hash = "sha256:df56ade8a9b43476ce020be0202b09a3a4cc0c7a079f8fe5ee4b87105eff4237"},
-    {file = "imageio-2.26.1.tar.gz", hash = "sha256:7f7bc13254a311f298bc64d60c2690dd3460fd412532717e2c51715daed17fc5"},
+    {file = "imageio-2.27.0-py3-none-any.whl", hash = "sha256:24c6ad7d000e64eacc2861c402b6fb128f370cb0a6623cf796d83bca0d0d14d3"},
+    {file = "imageio-2.27.0.tar.gz", hash = "sha256:ee269c957785ef0373cc7a7323185956d83ec05e6cdf20b42a03ba7b74ac58c6"},
 ]
 
 [package.dependencies]
@@ -3052,15 +3052,19 @@ files = [
 
 [[package]]
 name = "webcolors"
-version = "1.12"
-description = "A library for working with color names and color values formats defined by HTML and CSS."
+version = "1.13"
+description = "A library for working with the color formats defined by HTML and CSS."
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "webcolors-1.12-py3-none-any.whl", hash = "sha256:d98743d81d498a2d3eaf165196e65481f0d2ea85281463d856b1e51b09f62dce"},
-    {file = "webcolors-1.12.tar.gz", hash = "sha256:16d043d3a08fd6a1b1b7e3e9e62640d09790dce80d2bdd4792a175b35fe794a9"},
+    {file = "webcolors-1.13-py3-none-any.whl", hash = "sha256:29bc7e8752c0a1bd4a1f03c14d6e6a72e93d82193738fa860cbff59d0fcc11bf"},
+    {file = "webcolors-1.13.tar.gz", hash = "sha256:c225b674c83fa923be93d235330ce0300373d02885cef23238813b0d5668304a"},
 ]
+
+[package.extras]
+docs = ["furo", "sphinx", "sphinx-copybutton", "sphinx-inline-tabs", "sphinx-notfound-page", "sphinxext-opengraph"]
+tests = ["pytest", "pytest-cov"]
 
 [[package]]
 name = "webencodings"

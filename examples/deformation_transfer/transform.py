@@ -7,7 +7,7 @@ import typer
 from taichi_extras.mesh.obj import read_obj, write_obj
 from taichi_extras.spatial import transform as tie_transform
 
-ti.init()
+ti.init(kernel_profiler=True)
 
 
 num_points: int
@@ -67,6 +67,9 @@ def main(
         faces=faces.to_numpy(),
         filepath=output_filepath,
     )
+
+    ti.profiler.print_scoped_profiler_info()
+    ti.profiler.print_kernel_profiler_info()
 
 
 if __name__ == "__main__":
