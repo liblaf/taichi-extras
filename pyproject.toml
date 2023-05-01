@@ -20,7 +20,7 @@ meshio = { extras = ["all"], version = "^5.3.4" }
 python = ">=3.10,<3.11"
 pyvista = { extras = ["all"], version = "^0.38.5" }
 taichi = "^1.4.1"
-typer = { extras = ["all"], version = "^0.7.0" }
+typer = { extras = ["all"], version = ">=0.7,<0.9" }
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
