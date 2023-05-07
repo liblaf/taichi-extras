@@ -52,7 +52,7 @@ def main(
     if filepath:
         mesh: pv.PolyData = typing.cast(pv.PolyData, pv.read(filepath))
     else:
-        mesh: pv.PolyData = typing.cast(pv.PolyData, pv.Box())
+        mesh: pv.PolyData = typing.cast(pv.PolyData, pv.Sphere())
     mesh: pv.PolyData = typing.cast(pv.PolyData, mesh.triangulate())
     gen: tetgen.TetGen = tetgen.TetGen(mesh)
     gen.make_manifold(verbose=True)

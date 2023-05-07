@@ -10,6 +10,8 @@ def extract_surface(tetras: np.ndarray) -> np.ndarray:
         assert len(vertices) == 4
         for face in itertools.combinations(vertices, 3):
             # v1, v2, v3 = face
+            for p in itertools.permutations(face):
+                if p
             if face in surfaces:
                 # inner face - shared by two tetrahedrons
                 surfaces.remove(face)

@@ -1,4 +1,4 @@
-FRAMES         := $(CURDIR)/frames
+FRAMES         := /tmp/frames
 MAX_FRAMES     := 100
 MESH           := $(CURDIR)/data/template-centered.obj
 MOVEMENT_SPEED := 1.0
@@ -14,6 +14,7 @@ view: $(CURDIR)/output.mp4
 
 video: $(CURDIR)/output.mp4
 
+.PHONY: frames
 frames: $(CURDIR)/main.py $(MESH)
 	python $< --max-frames $(MAX_FRAMES) --movement-speed $(MOVEMENT_SPEED) --off-screen --output-prefix $(FRAMES) $(MESH)
 
