@@ -18,7 +18,7 @@ version = "0.1.0"
 [tool.poetry.dependencies]
 meshio = { extras = ["all"], version = "^5.3.4" }
 python = ">=3.10,<3.11"
-pyvista = { extras = ["all"], version = "^0.38.5" }
+pyvista = { extras = ["all"], version = ">=0.38.5,<0.40.0" }
 taichi = "^1.4.1"
 typer = { extras = ["all"], version = "^0.7.0" }
 
