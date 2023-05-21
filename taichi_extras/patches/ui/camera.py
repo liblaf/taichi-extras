@@ -9,13 +9,13 @@ from .utils import euler_to_vec, vec_to_euler
 def track_user_inputs(
     self: ti.ui.Camera,
     window: ti.ui.Window,
-    movement_speed: float = 60.0,
-    yaw_speed: float = 120.0,
-    pitch_speed: float = 120.0,
-    hold_key=None,
+    movement_speed: float = 1.0,
+    yaw_speed: float = 1.0,
+    pitch_speed: float = 1.0,
+    hold_key=ti.ui.LMB,
 ):
     """Move the camera according to user inputs.
-    Press `w`, `s`, `a`, `d`, `e`, `q` to move the camera
+    Press `w`, `s`, `a`, `d`, `SPACE`, `SHIFT` to move the camera
     `formard`, `back`, `left`, `right`, `head up`, `head down`, accordingly.
 
     Args:
@@ -26,9 +26,10 @@ def track_user_inputs(
         pitch_speed (:mod:`~taichi.types.primitive_types`): speed of changes in pitch angle.
         hold_key (:mod:`~taichi.ui`): User defined key for holding the camera movement.
     """
-    front = (self.curr_lookat - self.curr_position).normalized()
+    sight = (self.curr_lookat - self.curr_position).normalized()
     position_change = ti.Vector([0.0, 0.0, 0.0])
-    left = self.curr_up.cross(front)
+    left: ti.Vector = self.curr_up.cross(sight).normalized()
+    front: ti.Vector = left.cross(self.curr_up).normalized()
     up = self.curr_up
 
     if (not hasattr(self, "last_time")) or (self.last_time is None):
@@ -45,9 +46,9 @@ def track_user_inputs(
         position_change += left * movement_speed
     if window.is_pressed("d"):
         position_change -= left * movement_speed
-    if window.is_pressed("e"):
+    if window.is_pressed(ti.ui.SPACE):
         position_change += up * movement_speed
-    if window.is_pressed("q"):
+    if window.is_pressed(ti.ui.SHIFT):
         position_change -= up * movement_speed
     self.position(*(self.curr_position + position_change))
     self.lookat(*(self.curr_lookat + position_change))
@@ -59,12 +60,10 @@ def track_user_inputs(
         dx = curr_mouse_x - self.last_mouse_x
         dy = curr_mouse_y - self.last_mouse_y
 
-        yaw, pitch = vec_to_euler(front)
+        yaw, pitch = vec_to_euler(sight)
 
-        yaw_speed *= time_elapsed
-        pitch_speed *= time_elapsed
-        yaw -= dx * yaw_speed
-        pitch += dy * pitch_speed
+        yaw += dx * yaw_speed
+        pitch -= dy * pitch_speed
 
         pitch_limit = math.pi / 2 * 0.99
         if pitch > pitch_limit:
@@ -72,7 +71,7 @@ def track_user_inputs(
         elif pitch < -pitch_limit:
             pitch = -pitch_limit
 
-        front = euler_to_vec(yaw, pitch)
-        self.lookat(*(self.curr_position + front))
+        sight = euler_to_vec(yaw, pitch)
+        self.lookat(*(self.curr_position + sight))
 
     self.last_mouse_x, self.last_mouse_y = curr_mouse_x, curr_mouse_y

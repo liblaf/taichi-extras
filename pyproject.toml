@@ -17,10 +17,12 @@ version = "0.1.0"
 
 [tool.poetry.dependencies]
 meshio = { extras = ["all"], version = "^5.3.4" }
-python = ">=3.10,<3.11"
-pyvista = { extras = ["all"], version = "^0.38.5" }
-taichi = "^1.4.1"
-typer = { extras = ["all"], version = "^0.7.0" }
+meshtaichi-patcher = "^0.0.19"
+python = ">=3.11,<3.12"
+pyvista = { extras = ["all"], version = "^0.39.0" }
+taichi = "^1.6.0"
+typer = { extras = ["all"], version = "^0.9.0" }
+numpy = "^1.24.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
