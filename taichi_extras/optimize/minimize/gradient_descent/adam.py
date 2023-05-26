@@ -48,7 +48,7 @@ class Adam:
         callback: typing.Optional[typing.Callable] = None,
     ) -> None:
         start: datetime.datetime = datetime.datetime.now()
-        gradient_descent_functions: list[typing.Callable[[int], None]] = list()
+        gradient_descent_functions: list[typing.Callable[[int], None]] = []
         for i in range(len(self.x)):
 
             @ti.kernel

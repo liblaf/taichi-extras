@@ -29,9 +29,15 @@ def main(
     if output_filepath is None:
         output_filepath = mesh_filepath.with_suffix(".fixed.txt")
     mesh, faces = taichi_extras.tetgen.io.results.read(filepath=mesh_filepath)
-    position: np.ndarray = mesh.get_position_as_numpy()
-    fixed: np.ndarray = np.sum(position**2, axis=1) < ((radius**2) + 1e-6)
-    np.savetxt(fname=output_filepath, X=fixed, fmt="%d")
+    undeformed_position: np.ndarray = mesh.get_position_as_numpy()
+    fixed: np.ndarray = np.sum(undeformed_position**2, axis=1) < (
+        (radius**2) + 1e-6
+    )
+    deformed_position: np.ndarray = np.zeros_like(undeformed_position)
+    deformed_position[fixed] = undeformed_position[fixed]
+    deformed_position[fixed, 0] *= 1.00
+    deformed_position[~fixed] = np.nan
+    np.savetxt(fname=output_filepath, X=deformed_position)
 
 
 if __name__ == "__main__":

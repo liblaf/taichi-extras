@@ -5,14 +5,12 @@ on:
     branches:
       - main
 
-# - [x] Settings > General > Pull Requests > Automatically delete head branches
-# - [x] Settings > Actions > General > Workflow permissions > Allow GitHub Actions to create and approve pull requests
 permissions:
   contents: write
   pull-requests: write
 
 env:
-  PYTHON_VERSION: "3.10"
+  PYTHON_VERSION: "3.11"
 
 jobs:
   build-pkg:

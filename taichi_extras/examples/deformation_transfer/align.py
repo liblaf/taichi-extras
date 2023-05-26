@@ -4,9 +4,9 @@ import numpy as np
 import taichi as ti
 import typer
 
+from taichi_extras.math.spatial import transform as tie_transform
 from taichi_extras.mesh.obj import read_obj
 from taichi_extras.optimize.minimize.gradient_descent.adam import Adam
-from taichi_extras.spatial import transform as tie_transform
 
 ti.init(kernel_profiler=True)
 

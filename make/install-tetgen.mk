@@ -12,7 +12,7 @@ clean:
 install: $(BIN)/tetgen
 
 $(BIN)/tetgen: $(TETGEN_DIR)/tetgen
-	install $(INSTALL_OPTIONS) $< $@
+	@ install $(INSTALL_OPTIONS) $< $@
 
 $(CURDIR)/tetgen1.6.0.tar.gz:
 	wget --output-document=$@ https://wias-berlin.de/software/tetgen/1.5/src/tetgen1.6.0.tar.gz

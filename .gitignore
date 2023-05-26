@@ -175,17 +175,20 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 
-*.edge
-*.ele
-*.face
+# Taichi
 *.gif
 *.ini
 *.mp4
+frames
+
+# Mesh & TetGen
+*.edge
+*.ele
+*.face
 *.node
 *.ply
 *.png
 *.smesh
 *.tar.gz
 *.txt
-frames
 tetgen1.6.0

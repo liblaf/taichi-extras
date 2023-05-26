@@ -12,7 +12,7 @@ def _pyvista_faces_to_indices(faces: np.ndarray) -> np.ndarray:
     convert pyvista faces (1-d array) to indices (n*3 array)
     """
     i: int = 0
-    indices: list[np.ndarray] = list()
+    indices: list[np.ndarray] = []
     while i < len(faces):
         assert faces[i] == 3
         indices.append(faces[i + 1 : i + faces[i] + 1])
