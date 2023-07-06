@@ -7,7 +7,7 @@ import taichi as ti
 from taichi_extras.examples.projective_statics.main import init
 from taichi_extras.examples.projective_statics.utils.const import SHEAR_MODULUS
 
-from . import EPS
+from . import TOLERANCE
 
 ti.init()
 
@@ -68,17 +68,25 @@ def test_hessian(mesh_filepath: Path) -> None:
         if x == y:
             if i == j:
                 np.testing.assert_allclose(
-                    verts_hessian[i], expected[i, j, x, y], rtol=EPS, atol=EPS
+                    verts_hessian[i],
+                    expected[i, j, x, y],
+                    rtol=TOLERANCE,
+                    atol=TOLERANCE,
                 )
         else:
-            np.testing.assert_allclose(expected[i, j, x, y], 0.0, rtol=EPS, atol=EPS)
+            np.testing.assert_allclose(
+                expected[i, j, x, y], 0.0, rtol=TOLERANCE, atol=TOLERANCE
+            )
     for e, x, y in np.ndindex(len(edges_u), 3, 3):
         if x == y:
             i, j = edges_u[e], edges_v[e]
             np.testing.assert_allclose(
-                edges_hessian[e], expected[i, j, x, y], rtol=EPS, atol=EPS
+                edges_hessian[e], expected[i, j, x, y], rtol=TOLERANCE, atol=TOLERANCE
             )
         else:
             np.testing.assert_allclose(
-                expected[edges_u[e], edges_v[e], x, y], 0.0, rtol=EPS, atol=EPS
+                expected[edges_u[e], edges_v[e], x, y],
+                0.0,
+                rtol=TOLERANCE,
+                atol=TOLERANCE,
             )

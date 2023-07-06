@@ -5,10 +5,12 @@ import numpy as np
 import taichi as ti
 import typer
 
-import taichi_extras.math.mat3
 import taichi_extras.patches.ui.camera
 import taichi_extras.patches.ui.window
 import taichi_extras.tetgen.io.results
+from taichi_extras.examples.projective_statics.utils import math as math_utils
+
+# from .utils import math as math_utils
 
 E, nu = 1e4, 0.0
 GRAVITY: ti.Vector = ti.Vector([0.0, 0.0, 0.0])
@@ -88,7 +90,7 @@ def compute_init_kernel():
             dH = -c.volume * dP @ c.undeformed_shape_inverse.transpose()
             for i in ti.static(range(3)):
                 for j in ti.static(range(1)):
-                    hessian[i, u] -= (TIME_STEP**2) * dH[j, i]
+                    hessian[i, u] = -(TIME_STEP**2) * dH[j, i]
                     hessian[3, u] += (TIME_STEP**2) * dH[j, i]
 
         for e in c.edges:
@@ -154,7 +156,7 @@ def compute_force_kernel():
             [c.verts[i].position - c.verts[3].position for i in ti.static(range(3))]
         )
         deformation_gradient = shape @ c.undeformed_shape_inverse
-        U, Sigma, V = taichi_extras.math.mat3.positive_singular_value_decomposition(
+        U, Sigma, V = math_utils.positive_singular_value_decomposition_func(
             deformation_gradient
         )
         P = 2 * mu * (deformation_gradient - U @ V.transpose())

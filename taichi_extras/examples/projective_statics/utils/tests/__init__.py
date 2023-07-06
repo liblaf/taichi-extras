@@ -1,1 +1,1 @@
-EPS: float = 1e-6
+TOLERANCE: float = 1e-6

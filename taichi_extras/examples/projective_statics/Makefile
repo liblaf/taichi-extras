@@ -2,7 +2,7 @@ DATA    := $(CURDIR)/data
 FRAMES  := $(CURDIR)/frames
 ROOT    != git rev-parse --show-toplevel
 
-OPTIONS := # --max-frames 30 --off-screen
+OPTIONS := --max-frames 72 --off-screen
 
 all: run-cube
 
@@ -20,18 +20,19 @@ black:
 prettier: $(ROOT)/.gitignore
 	prettier --write --ignore-path $< $(CURDIR)
 
-run-%: $(DATA)/%.1.node $(DATA)/%.1.fixed.txt
+run-%: $(DATA)/%.1.node $(DATA)/%.1.fixed.txt $(CURDIR)/main.py
 	python $(CURDIR)/main.py $(OPTIONS) $<
 
 test-%: $(DATA)/%.1.node $(DATA)/%.1.fixed.txt
-	pytest --mesh-filepath $< $(CURDIR)/utils/tests
+	pytest --capture=no --mesh-filepath $< $(CURDIR)/utils/tests
 
 $(DATA):
 	mkdir --parents $@
 
 $(DATA)/%.1.fixed.txt: $(DATA)/%.1.node $(CURDIR)/fixed_indices.py
-	python $(CURDIR)/fixed_indices.py --output $@ --radius 0.0 $<
+	python $(CURDIR)/fixed_indices.py --output $@ --radius 0.5 $<
 
+.SECONDARY:
 $(DATA)/%.1.node: $(DATA)/%.smesh
 	tetgen -zpqV $<
 

@@ -1,8 +1,8 @@
 import taichi as ti
 
 from . import conjugate_gradient
+from . import math as math_utils
 from .const import GRAVITY, MASS_DENSITY, SHEAR_MODULUS, TIME_STEP
-from .math import a_add_b_mul_c, dot, positive_singular_value_decomposition_func
 
 
 def init(
@@ -54,6 +54,7 @@ def init_kernel(mesh: ti.template(), mass_density: ti.f32, shear_modulus: ti.f32
                     if e.verts[i].id == c.verts[j].id:
                         u[i] = j
             e.hessian += hessian[u[0], u[1]]
+
     for v in mesh.verts:
         v.position *= 1.5
 
@@ -81,49 +82,23 @@ def projective_dynamics(
     r: ti.MatrixField = mesh.verts.get_member_field(key="r")
     x: ti.MatrixField = mesh.verts.get_member_field(key="x")
 
+    def A_mul_x(x: ti.MatrixField, time_step: float = TIME_STEP) -> ti.MatrixField:
+        return conjugate_gradient.A_mul_x(mesh=mesh, x=x, time_step=time_step)
+
     position_previous.copy_from(position)
     for _ in range(n_projective_dynamics_iter):
         compute_force(mesh=mesh, shear_modulus=shear_modulus, gravity=gravity)
-        a_add_b_mul_c(result=position_predict, a=position, b=time_step, c=velocity)
+        math_utils.a_add_b_mul_c(
+            result=position_predict, a=position, b=time_step, c=velocity
+        )
         # conjugate gradient method
         # https://en.wikipedia.org/wiki/Conjugate_gradient_method#The_resulting_algorithm
         conjugate_gradient.compute_b(mesh=mesh, time_step=time_step)
-        # x_0 = 0
-        x.fill(val=0.0)
-        # r_0 = b - A @ x_0
-        a_add_b_mul_c(
-            r, b, -1.0, conjugate_gradient.A_mul_x(mesh, x, time_step=time_step)
+        x = conjugate_gradient.conjugate_gradient_method(
+            b=b, p=p, r=r, x=x, A_mul_x=A_mul_x, n_iter=n_conjugate_gradient_iter
         )
-        r_squared_init: float = dot(r, r)
-        r_squared_allow: float = r_squared_init * 1e-10
-        if r_squared_init > r_squared_allow:
-            # p_0 = r_0
-            p.copy_from(r)
-            for _ in range(n_conjugate_gradient_iter):
-                r_squared: float = dot(r, r)  # r_k^T @ r_k
-                # alpha = r_k^T @ r_k / (p_k^T @ A @ p_k)
-                alpha: float = r_squared / dot(
-                    p, conjugate_gradient.A_mul_x(mesh, p, time_step=time_step)
-                )
-                # x_{k + 1} = x_k + alpha * p_k
-                a_add_b_mul_c(x, x, alpha, p)
-                # r_{k + 1} = r_k - alpha * A @ p_k
-                a_add_b_mul_c(
-                    r,
-                    r,
-                    -alpha,
-                    conjugate_gradient.A_mul_x(mesh, p, time_step=time_step),
-                )
-                r_new_squared: float = dot(r, r)
-                if r_new_squared < r_squared_allow:
-                    break
-                # beta = r_{k + 1}^T @ r_{k + 1} / r_k^T @ r_k
-                beta: float = r_new_squared / r_squared
-                print(r_squared, r_new_squared, beta)
-                # p_{k + 1} = r_{k + 1} + beta * p_k
-                a_add_b_mul_c(p, r, beta, p)
         # q(k + 1) = q(k) + Delta
-        a_add_b_mul_c(position, position, 1.0, x)
+        math_utils.a_add_b_mul_c(position, position, 1.0, x)
     compute_velocity(mesh=mesh, time_step=time_step)
     apply_constraint_fixed(mesh=mesh)
 
@@ -147,7 +122,9 @@ def compute_force_kernel(
             [c.verts[i].position - c.verts[3].position for i in ti.static(range(3))]
         )
         deformation_gradient = shape @ c.undeformed_shape_inverse
-        U, _, V = positive_singular_value_decomposition_func(deformation_gradient)
+        U, _, V = math_utils.positive_singular_value_decomposition_func(
+            deformation_gradient
+        )
         force = (
             shear_modulus
             * c.volume

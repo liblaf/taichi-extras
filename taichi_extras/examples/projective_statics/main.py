@@ -11,6 +11,7 @@ import taichi_extras.patches.ui.camera
 import taichi_extras.patches.ui.window
 import taichi_extras.tetgen.io.results
 from taichi_extras.examples.projective_statics.utils.const import (
+    GRAVITY,
     MASS_DENSITY,
     SHEAR_MODULUS,
     TIME_STEP,
@@ -106,7 +107,10 @@ def main(
                 window.show()
 
             taichi_extras.examples.projective_statics.utils.projective_dynamics.projective_dynamics(
-                mesh=mesh, shear_modulus=SHEAR_MODULUS
+                mesh=mesh,
+                shear_modulus=SHEAR_MODULUS,
+                gravity=GRAVITY,
+                time_step=TIME_STEP,
             )
 
     if profiler:

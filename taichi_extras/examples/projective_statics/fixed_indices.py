@@ -35,7 +35,7 @@ def main(
     )
     deformed_position: np.ndarray = np.zeros_like(undeformed_position)
     deformed_position[fixed] = undeformed_position[fixed]
-    deformed_position[fixed, 0] *= 1.00
+    deformed_position[fixed, 1] *= 1.50
     deformed_position[~fixed] = np.nan
     np.savetxt(fname=output_filepath, X=deformed_position)
 
