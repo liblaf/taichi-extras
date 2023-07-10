@@ -43,14 +43,14 @@ repos:
       # - id: sort-simple-yaml
       - id: trailing-whitespace
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: "v16.0.3"
+    rev: "v16.0.6"
     hooks:
       - id: clang-format
         types_or:
           - c
           - c++
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: "v3.0.0-alpha.9-for-vscode"
+    rev: "v3.0.0"
     hooks:
       - id: prettier
   - repo: https://github.com/dnephin/pre-commit-golang
@@ -82,7 +82,7 @@ repos:
           - --profile
           - black
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: "3.2.2"
+    rev: "3.5.2"
     hooks:
       - id: commitizen
       # - id: commitizen-branch
@@ -92,7 +92,7 @@ repos:
       - id: cmake-format
       - id: cmake-lint
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "0.23.0"
+    rev: "0.23.2"
     hooks:
       # - id: check-jsonschema
       # - id: check-metaschema
@@ -115,7 +115,7 @@ repos:
       - id: forbid-bidi-controls
       - id: macro-expand
   - repo: https://github.com/scop/pre-commit-shfmt
-    rev: "v3.6.0-2"
+    rev: "v3.7.0-1"
     hooks:
       - id: shfmt
         files: (.sh|.zsh|.zsh-theme|envrc|zshrc)(.tmpl)?$
@@ -130,7 +130,7 @@ repos:
           - --space-redirects
       # - id: shfmt-docker
   - repo: https://github.com/cmhughes/latexindent.pl
-    rev: "V3.21.1"
+    rev: "V3.22.1"
     hooks:
       - id: latexindent
         files: .(tex|sty|cls|bib)$
@@ -146,7 +146,7 @@ repos:
       # - id: latexindent-docker
 
   - repo: https://github.com/python-poetry/poetry
-    rev: "1.4.2"
+    rev: "1.5.0"
     hooks:
       - id: poetry-check
       - id: poetry-lock
