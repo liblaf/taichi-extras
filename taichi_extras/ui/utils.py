@@ -1,4 +1,5 @@
 import math
+from typing import cast
 
 import taichi as ti
 
@@ -15,12 +16,12 @@ def euler_to_vec(yaw: float, pitch: float) -> ti.Vector:
     return v
 
 
-def vec_to_euler(v) -> tuple[float, float]:
-    v = v.normalized()
+def vec_to_euler(v: ti.Vector) -> tuple[float, float]:
+    v = cast(ti.Vector, v.normalized())
     pitch: float = math.asin(v[1])
 
-    sin_yaw: float = v[0] / math.cos(pitch)
-    cos_yaw: float = v[2] / math.cos(pitch)
+    sin_yaw: float = v[0] / math.cos(pitch)  # type: ignore
+    cos_yaw: float = v[2] / math.cos(pitch)  # type: ignore
     cos_yaw = clamp(x=cos_yaw, xmin=-1.0, xmax=+1.0)
     yaw = math.acos(cos_yaw)
     if sin_yaw < 0:

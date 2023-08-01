@@ -1,26 +1,30 @@
+SCRIPTS := $(CURDIR)/scripts
+
 all:
 
-clean:
-	git clean -d --force -X
+include make/*.mk
 
-lock: $(CURDIR)/pyproject.toml $(CURDIR)/poetry.lock $(CURDIR)/requirements.txt
+clean: tetgen-clean
+	@ $(RM) --recursive --verbose $(CURDIR)/.pytest_cache
+	@ $(RM) --verbose $(CURDIR)/.coverage
+	@ $(RM) --verbose $(CURDIR)/coverage.xml
 
 pretty: black prettier
+
+setup: $(SCRIPTS)/setup-cuda.sh tetgen-install
+	poetry install
+	bash $<
 
 test:
 	pytest --cov --cov-report=xml
 
-ALWAYS:
+#####################
+# Auxiliary Targets #
+#####################
 
 black:
-	isort --profile black $(CURDIR)
+	isort --profile=black $(CURDIR)
 	black $(CURDIR)
 
-prettier: $(CURDIR)/.gitignore ALWAYS
-	prettier --write --ignore-path $< $(CURDIR)
-
-$(CURDIR)/poetry.lock: $(CURDIR)/pyproject.toml ALWAYS
-	poetry lock
-
-$(CURDIR)/requirements.txt: $(CURDIR)/poetry.lock
-	poetry export --output=$@ --without-hashes --without-urls
+prettier: $(CURDIR)/.gitignore
+	prettier --write --ignore-path=$< $(CURDIR)

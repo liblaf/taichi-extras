@@ -3,10 +3,7 @@ from pathlib import Path
 import numpy as np
 
 
-def read(filepath: str | Path, reverse: bool = True) -> np.ndarray:
-    if not isinstance(filepath, Path):
-        filepath = Path(filepath)
-
+def read(filepath: Path, reverse: bool = True) -> np.ndarray:
     text: str = filepath.read_text()
     lines: list[str] = text.splitlines()
     lines: list[str] = list(map(str.strip, lines))

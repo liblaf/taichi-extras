@@ -5,7 +5,7 @@ import numpy as np
 
 
 def write(
-    filepath: str | Path,
+    filepath: Path,
     points: np.ndarray,
     facets: np.ndarray,
     holes: Optional[np.ndarray] = None,
@@ -14,8 +14,6 @@ def write(
     """
     https://www.wias-berlin.de/software/tetgen/fformats.smesh.html
     """
-    if not isinstance(filepath, Path):
-        filepath = Path(filepath)
     if holes is None:
         holes = np.empty(shape=(0, 3))
     if attributes is None:
