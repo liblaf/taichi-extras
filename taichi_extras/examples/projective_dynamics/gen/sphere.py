@@ -18,7 +18,7 @@ def main(
         ),
     ]
 ) -> None:
-    mesh: PolyData = typing.cast(PolyData, pv.Cube())
+    mesh: PolyData = typing.cast(PolyData, pv.Sphere())
     points, indices = poly_data.get_vertices_indices(mesh)
     smesh.write(output, points=points, facets=indices)
 

@@ -28,7 +28,7 @@ class Window(ti.ui.Window):
         fps_limit: int = 1000,
         pos: tuple[int, int] = (100, 100),
         *,
-        output_dir: Path = Path.cwd(),
+        output_dir: Path = Path.cwd() / "output",
         frame_interval: int = 1,
         framerate: int = 30,
         automatic_build: bool = False,

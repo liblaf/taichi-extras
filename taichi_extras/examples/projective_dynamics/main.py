@@ -31,9 +31,7 @@ def main(
     *,
     frame_interval: Annotated[int, typer.Option("-i", "--frame-interval")] = 1,
     max_frames: Annotated[int, typer.Option("-f", "--max-frames")] = sys.maxsize,
-    output: Annotated[Path, typer.Option("-o", "--output")] = Path.cwd()
-    / "data"
-    / "output.stl",
+    output: Annotated[Path, typer.Option("-o", "--output")] = Path.cwd() / "output",
     show_window: Annotated[bool, typer.Option("-w", "--show-window")] = False
 ) -> None:
     mesh, faces = node.read_all(input, relations=["CE", "CV", "EV", "FV"])
@@ -49,8 +47,10 @@ def main(
     scene: Scene = Scene()
     window: Window = Window(
         name="Projective Dynamics",
+        res=(1280, 960),
         show_window=show_window,
         frame_interval=frame_interval,
+        output_dir=output,
     )
     canvas: Canvas = window.get_canvas()
     camera.position(0.0, 0.0, 3.0)
@@ -82,7 +82,7 @@ def main(
                 time_step=TIME_STEP,
             )
 
-    stl.write(output=output, mesh=mesh)
+    stl.write(output=output / "result.stl", mesh=mesh)
 
 
 if __name__ == "__main__":

@@ -19,6 +19,8 @@ def compute_hessian_kernel(
         )
         c.shape_undeformed_inverse = shape.inverse()
         c.volume = ti.abs(shape.determinant()) / 6.0  # type: ignore
+        # for vv in range(c.verts.size):
+        #     v = c.verts[vv]
         for v in c.verts:
             v.mass += mass_density * c.volume / 4.0
         hessian = Matrix.zero(dt=ti.f32, n=4, m=4)
@@ -40,6 +42,8 @@ def compute_hessian_kernel(
             v = c.verts[z]
             v.hessian += hessian[z, z]
 
+        # for ee in range(c.edges.size):
+        #     e = c.edges[ee]
         for e in c.edges:
             u = Vector([0, 0])
             for i in ti.static(range(2)):
@@ -100,4 +104,6 @@ def get_A(mesh: MeshInstance, time_step: float = TIME_STEP) -> SparseMatrix:
         num_rows=len(mesh.verts) * 3, num_cols=len(mesh.verts) * 3
     )
     get_A_kernel(mesh=mesh, builder=builder, time_step=time_step)
+    position: MatrixField = mesh.verts.get_member_field("position")
+    print(position.to_numpy())
     return builder.build()
