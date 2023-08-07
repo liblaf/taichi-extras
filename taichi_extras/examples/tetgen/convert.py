@@ -4,7 +4,7 @@ from typing import Annotated
 import taichi as ti
 import typer
 
-from taichi_extras.io import node, stl
+from taichi_extras.io import node, trimesh
 
 ti.init()
 
@@ -24,7 +24,7 @@ def main(
     ],
 ) -> None:
     mesh: ti.MeshInstance = node.read_mesh(input, relations=["FV"])
-    stl.write_mesh(output, mesh=mesh)
+    trimesh.write_mesh(output, mesh=mesh)
 
 
 if __name__ == "__main__":
