@@ -19,7 +19,7 @@ PYTHON := $(ENV) python
 
 TARGET_FILES += $(DATA)/undeformed.1.node
 TARGET_FILES += $(DATA)/undeformed.smesh
-TARGET_FILES += $(OUTPUT)/tet.stl
+TARGET_FILES += $(OUTPUT)/tet.off
 ifeq ($(FIXED), true)
   TARGET_FILES += $(DATA)/fixed.node
 endif
@@ -46,13 +46,13 @@ setup:
 test:
 	$(ENV) pytest --cov --cov-report=term --cov-report=term-missing
 
-view-tet: $(OUTPUT)/tet.stl
+view-tet: $(OUTPUT)/tet.off
 	meshlab $<
 
-view-tri: $(OUTPUT)/tri.stl
+view-tri: $(OUTPUT)/tri.off
 	meshlab $<
 
-view-undeformed: $(DATA)/undeformed.stl
+view-undeformed: $(DATA)/undeformed.off
 	meshlab $<
 
 #####################
@@ -72,11 +72,11 @@ $(DATA)/undeformed.smesh: $(GEN)/$(TARGET).py | $(DATA)
 	$(PYTHON) $< $@
 
 CONVERT := $(PYTHON) $(dir $(CURDIR))/tetgen/convert.py
-$(DATA)/undeformed.stl: $(DATA)/undeformed.1.node
+$(DATA)/undeformed.off: $(DATA)/undeformed.1.node
 	$(CONVERT) $< $@
 
 ifeq ($(FIXED), true)
   EXTRA_DATA_FILE_LIST += $(DATA)/fixed.node
 endif
-$(OUTPUT)/tet.stl $(OUTPUT)/tri.stl: $(DATA)/undeformed.1.node $(EXTRA_DATA_FILE_LIST) $(CURDIR)/main.py | $(OUTPUT)
+$(OUTPUT)/tet.off $(OUTPUT)/tri.off: $(DATA)/undeformed.1.node $(EXTRA_DATA_FILE_LIST) $(CURDIR)/main.py | $(OUTPUT)
 	$(PYTHON) $(CURDIR)/main.py $(OPTIONS) --output=$(@D) $<

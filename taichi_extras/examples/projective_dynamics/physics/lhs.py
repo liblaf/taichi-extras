@@ -85,9 +85,10 @@ def get_A_kernel(
 ):
     for v in mesh.verts:
         for i in ti.static(range(3)):
-            builder[v.id * 3 + i, v.id * 3 + i] += v.mass / (time_step**2) + v.hessian
+            result = v.mass / (time_step**2) + v.hessian
             if not ti.math.isnan(v.fixed[i]):
-                builder[v.id * 3 + i, v.id * 3 + i] += fixed_stiffness * v.mass
+                result += fixed_stiffness * v.mass
+            builder[v.id * 3 + i, v.id * 3 + i] += result
 
     for e in mesh.edges:
         for i in ti.static(range(3)):

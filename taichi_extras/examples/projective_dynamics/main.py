@@ -19,8 +19,7 @@ from taichi_extras.examples.projective_dynamics.physics.dynamics import (
     init,
     projective_dynamics,
 )
-from taichi_extras.examples.projective_dynamics.physics.fixed import init_fixed
-from taichi_extras.io import node, stl
+from taichi_extras.io import node, trimesh
 from taichi_extras.ui.camera import Camera
 from taichi_extras.ui.window import Window
 
@@ -101,8 +100,8 @@ def main(
                 time_step=TIME_STEP,
             )
 
-    stl.write(output / "tri.stl", vertices=position.to_numpy(), faces=faces)
-    stl.write_mesh(output / "tet.stl", mesh=mesh)
+    trimesh.write(output / "tri.off", vertices=position.to_numpy(), faces=faces)
+    trimesh.write_mesh(output / "tet.off", mesh=mesh)
 
 
 if __name__ == "__main__":

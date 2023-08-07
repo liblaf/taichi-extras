@@ -186,9 +186,9 @@ frames
 *.ele
 *.face
 *.node
+*.off
 *.ply
 *.png
 *.smesh
 *.tar.gz
-*.txt
 tetgen1.6.0

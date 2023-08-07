@@ -97,5 +97,4 @@ def projective_dynamics(
         b: ScalarNdarray = get_b(mesh=mesh)
         delta: ScalarNdarray = solver.solve(b)
         update_position(mesh=mesh, delta=delta)
-        # apply_fixed(mesh=mesh)
     compute_velocity(mesh=mesh, time_step=time_step)

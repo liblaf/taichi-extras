@@ -8,6 +8,8 @@ clean: tetgen-clean
 	@ $(RM) --recursive --verbose $(CURDIR)/.pytest_cache
 	@ $(RM) --verbose $(CURDIR)/.coverage
 	@ $(RM) --verbose $(CURDIR)/coverage.xml
+	@ find $(CURDIR) -name "__pycache__" -exec $(RM) --recursive --verbose {} +
+	@ find $(CURDIR) -name "*.pyc"       -exec $(RM) --verbose {} +
 
 pretty: black prettier
 
