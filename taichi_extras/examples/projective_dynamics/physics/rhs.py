@@ -5,7 +5,7 @@ from taichi import Matrix, MatrixField, MeshInstance, ScalarNdarray, Vector
 
 from taichi_extras.utils.mesh import element_field
 
-from .const import GRAVITY, SHEAR_MODULUS, TIME_STEP
+from .const import FIXED_STIFFNESS, GRAVITY, SHEAR_MODULUS, TIME_STEP
 from .mathematics import positive_singular_value_decomposition_func
 
 
@@ -31,8 +31,9 @@ def compute_position_predict(mesh: MeshInstance, time_step: float = TIME_STEP):
 @ti.kernel
 def compute_force_kernel(
     mesh: ti.template(),  # type: ignore
-    shear_modulus: ti.f32,
+    fixed_stiffness: ti.f32,
     gravity: ti.math.vec3,
+    shear_modulus: ti.f32,
 ):
     for c in mesh.cells:
         shape = Matrix.cols(
@@ -53,11 +54,16 @@ def compute_force_kernel(
     for v in mesh.verts:
         v.force += v.mass * gravity
 
+    for v in mesh.verts:
+        if not ti.math.isnan(v.fixed).any():  # type: ignore
+            v.force += 0.5 * v.mass * fixed_stiffness * (v.fixed - v.position)
+
 
 def compute_force(
     mesh: MeshInstance,
-    shear_modulus: float = SHEAR_MODULUS,
+    fixed_stiffness: float = FIXED_STIFFNESS,
     gravity: Vector = GRAVITY,
+    shear_modulus: float = SHEAR_MODULUS,
 ) -> None:
     element_field.place_safe(field=mesh.verts, members={"force": ti.math.vec3})
     assert "shape_undeformed_inverse" in mesh.cells.keys
@@ -67,7 +73,12 @@ def compute_force(
     assert "position" in mesh.verts.keys
     force: MatrixField = mesh.verts.get_member_field("force")
     force.fill(0.0)
-    compute_force_kernel(mesh=mesh, shear_modulus=shear_modulus, gravity=gravity)
+    compute_force_kernel(
+        mesh=mesh,
+        fixed_stiffness=fixed_stiffness,
+        gravity=gravity,
+        shear_modulus=shear_modulus,
+    )
 
 
 @ti.kernel

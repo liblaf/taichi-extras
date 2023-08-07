@@ -19,7 +19,7 @@ def main(
     ]
 ) -> None:
     mesh: PolyData = typing.cast(
-        PolyData, pv.Sphere(radius=1.0, direction=(0.0, 1.0, 0.0))
+        PolyData, pv.Box(bounds=(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5), level=8)
     )
     points, indices = poly_data.get_vertices_indices(mesh)
     smesh.write(output, points=points, facets=indices)

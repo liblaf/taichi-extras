@@ -1,7 +1,4 @@
-*.obj
 *.txt
-
-!s0.obj
-!s1.obj
-!t0.obj
-!u0.obj
+t1*.obj
+u0-*.obj
+u1*.obj

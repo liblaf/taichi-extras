@@ -10,3 +10,6 @@ TIME_STEP: float = 1.0 / 30.0
 YOUNG_MODULUS: float = 1e5
 POISSON_RATIO: float = 0.0
 SHEAR_MODULUS: float = YOUNG_MODULUS / (2.0 * (1.0 + POISSON_RATIO))
+
+# fixed
+FIXED_STIFFNESS: float = 1e5

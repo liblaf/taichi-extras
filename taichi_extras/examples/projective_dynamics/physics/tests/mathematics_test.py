@@ -29,12 +29,15 @@ def positive_singular_value_decomposition(
 def test_positive_singular_value_decomposition() -> None:
     mat3: Matrix = Matrix(np.random.rand(3, 3))
     U, Sigma, V = positive_singular_value_decomposition(mat3)
-    assert np.linalg.det(U.to_numpy()) > 0.0
-    assert np.linalg.det(V.to_numpy()) > 0.0
+    assert np.linalg.det(U.to_numpy()) > 0.0  # type: ignore
+    assert np.linalg.det(V.to_numpy()) > 0.0  # type: ignore
     for i, j in np.ndindex(3, 3):
         if i != j:
             np.testing.assert_allclose(Sigma[i, j], 0.0, rtol=TOLERANCE, atol=TOLERANCE)
     result: Matrix = U @ Sigma @ V.transpose()  # type: ignore
     np.testing.assert_allclose(
-        result.to_numpy(), mat3.to_numpy(), rtol=TOLERANCE, atol=TOLERANCE
+        result.to_numpy(),  # type: ignore
+        mat3.to_numpy(),  # type: ignore
+        rtol=TOLERANCE,
+        atol=TOLERANCE,
     )

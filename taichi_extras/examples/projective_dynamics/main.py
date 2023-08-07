@@ -1,19 +1,25 @@
 import sys
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional
 
 import taichi as ti
 import typer
-from physics.const import GRAVITY, MASS_DENSITY, SHEAR_MODULUS, TIME_STEP
+from physics.const import (
+    FIXED_STIFFNESS,
+    GRAVITY,
+    MASS_DENSITY,
+    SHEAR_MODULUS,
+    TIME_STEP,
+)
 from taichi.linalg import SparseSolver
 from taichi.ui.canvas import Canvas
 from taichi.ui.scene import Scene
 
 from taichi_extras.examples.projective_dynamics.physics.dynamics import (
     init,
-    init_position,
     projective_dynamics,
 )
+from taichi_extras.examples.projective_dynamics.physics.fixed import init_fixed
 from taichi_extras.io import node, stl
 from taichi_extras.ui.camera import Camera
 from taichi_extras.ui.window import Window
@@ -29,6 +35,18 @@ def main(
         ),
     ],
     *,
+    fixed: Annotated[
+        Optional[Path],
+        typer.Option(
+            "-f",
+            "--fixed",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            readable=True,
+            writable=False,
+        ),
+    ] = None,
     frame_interval: Annotated[int, typer.Option("-i", "--frame-interval")] = 1,
     max_frames: Annotated[int, typer.Option("-f", "--max-frames")] = sys.maxsize,
     output: Annotated[Path, typer.Option("-o", "--output")] = Path.cwd() / "output",
@@ -37,11 +55,12 @@ def main(
     mesh, faces = node.read_all(input, relations=["CE", "CV", "EV", "FV"])
     solver: SparseSolver = init(
         mesh=mesh,
+        fixed_filepath=fixed,
+        fixed_stiffness=FIXED_STIFFNESS,
         mass_density=MASS_DENSITY,
         shear_modulus=SHEAR_MODULUS,
         time_step=TIME_STEP,
     )
-    init_position(mesh=mesh)
 
     camera: Camera = Camera()
     scene: Scene = Scene()
@@ -62,27 +81,28 @@ def main(
 
     with window:
         while window.next_frame(max_frames=max_frames, track_user_input=camera):
-            scene.mesh(vertices=position, indices=indices)
-            scene.mesh(
-                vertices=position,
-                indices=indices,
-                color=(0.0, 0.0, 0.0),
-                show_wireframe=True,
-            )
-            scene.set_camera(camera=camera)
-            scene.ambient_light(color=(0.5, 0.5, 0.5))
-            scene.point_light(pos=(2.0, 2.0, 2.0), color=(2.0, 2.0, 2.0))
-            canvas.scene(scene=scene)
+            if show_window or frame_interval > 0:
+                scene.mesh(
+                    vertices=position,
+                    indices=indices,
+                    show_wireframe=True,
+                )
+                scene.set_camera(camera=camera)
+                scene.ambient_light(color=(0.5, 0.5, 0.5))
+                scene.point_light(pos=(2.0, 2.0, 2.0), color=(2.0, 2.0, 2.0))
+                canvas.scene(scene=scene)
 
             projective_dynamics(
                 mesh=mesh,
                 solver=solver,
-                shear_modulus=SHEAR_MODULUS,
+                fixed_stiffness=FIXED_STIFFNESS,
                 gravity=GRAVITY,
+                shear_modulus=SHEAR_MODULUS,
                 time_step=TIME_STEP,
             )
 
-    stl.write(output=output / "result.stl", mesh=mesh)
+    stl.write(output / "tri.stl", vertices=position.to_numpy(), faces=faces)
+    stl.write_mesh(output / "tet.stl", mesh=mesh)
 
 
 if __name__ == "__main__":

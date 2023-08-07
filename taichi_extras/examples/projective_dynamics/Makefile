@@ -1,29 +1,35 @@
-DATA   := $(CURDIR)/data
-FRAMES := $(CURDIR)/frames
-GEN    := $(CURDIR)/gen
-OUTPUT := $(CURDIR)/output
-
-TARGET  := cube
+TARGET  := shell
 TI_ARCH := cuda
 
-TARGET_FILES += $(DATA)/$(TARGET)/undeformed.smesh
-TARGET_FILES += $(DATA)/$(TARGET)/undeformed.1.node
-TARGET_FILES += $(OUTPUT)/$(TARGET)/result.stl
+DATA   := $(CURDIR)/data/$(TARGET)
+GEN    := $(CURDIR)/gen
+OUTPUT := $(CURDIR)/output/$(TARGET)
+
+FIXED != if [[ -f $(CURDIR)/fixed/$(TARGET).py ]]; then echo true; else echo false; fi
 
 OPTIONS += --frame-interval=1
 OPTIONS += --max-frames=$(shell echo $$((3 * 30)))
 # OPTIONS += --show-window
+ifeq ($(FIXED), true)
+  OPTIONS += --fixed=$(DATA)/fixed.node
+endif
 
 ENV    := env TI_ARCH=$(TI_ARCH)
 PYTHON := $(ENV) python
+
+TARGET_FILES += $(DATA)/undeformed.1.node
+TARGET_FILES += $(DATA)/undeformed.smesh
+TARGET_FILES += $(OUTPUT)/tet.stl
+ifeq ($(FIXED), true)
+  TARGET_FILES += $(DATA)/fixed.node
+endif
 
 all: $(TARGET_FILES)
 
 clean:
 	@ $(RM) --recursive --verbose $(CURDIR)/.pytest_cache
-	@ $(RM) --recursive --verbose $(DATA)
-	@ $(RM) --recursive --verbose $(FRAMES)
-	@ $(RM) --recursive --verbose $(OUTPUT)
+	@ $(RM) --recursive --verbose $(CURDIR)/data
+	@ $(RM) --recursive --verbose $(CURDIR)/output
 	@ $(RM) --verbose *.ini
 	@ $(RM) --verbose $(CURDIR)/.coverage
 	@ $(RM) --verbose $(CURDIR)/coverage.xml
@@ -40,25 +46,37 @@ setup:
 test:
 	$(ENV) pytest --cov --cov-report=term --cov-report=term-missing
 
-view: $(DATA)/$(TARGET)/undeformed.stl
+view-tet: $(OUTPUT)/tet.stl
+	meshlab $<
+
+view-tri: $(OUTPUT)/tri.stl
+	meshlab $<
+
+view-undeformed: $(DATA)/undeformed.stl
 	meshlab $<
 
 #####################
 # Auxiliary Targets #
 #####################
 
-$(DATA)/$(TARGET) $(OUTPUT)/$(TARGET):
+$(DATA) $(OUTPUT):
 	@ mkdir --parents --verbose $@
 
-$(DATA)/$(TARGET)/undeformed.1.node: $(DATA)/$(TARGET)/undeformed.smesh
+$(DATA)/fixed.node: $(DATA)/undeformed.1.node $(CURDIR)/fixed/$(TARGET).py
+	$(PYTHON) $(CURDIR)/fixed/$(TARGET).py $< $@
+
+$(DATA)/undeformed.1.node: $(DATA)/undeformed.smesh
 	tetgen -zpqV $<
 
-$(DATA)/$(TARGET)/undeformed.smesh: $(GEN)/$(TARGET).py | $(DATA)/$(TARGET)
+$(DATA)/undeformed.smesh: $(GEN)/$(TARGET).py | $(DATA)
 	$(PYTHON) $< $@
 
 CONVERT := $(PYTHON) $(dir $(CURDIR))/tetgen/convert.py
-$(DATA)/$(TARGET)/undeformed.stl: $(DATA)/$(TARGET)/undeformed.1.node
+$(DATA)/undeformed.stl: $(DATA)/undeformed.1.node
 	$(CONVERT) $< $@
 
-$(OUTPUT)/$(TARGET)/result.stl: $(DATA)/$(TARGET)/undeformed.1.node $(CURDIR)/main.py | $(OUTPUT)/$(TARGET)
+ifeq ($(FIXED), true)
+  EXTRA_DATA_FILE_LIST += $(DATA)/fixed.node
+endif
+$(OUTPUT)/tet.stl $(OUTPUT)/tri.stl: $(DATA)/undeformed.1.node $(EXTRA_DATA_FILE_LIST) $(CURDIR)/main.py | $(OUTPUT)
 	$(PYTHON) $(CURDIR)/main.py $(OPTIONS) --output=$(@D) $<

@@ -52,7 +52,6 @@ class Window(ti.ui.Window):
 
     def __enter__(self) -> Self:
         self.frame_count = -1
-        self.start_time = time.perf_counter()
         self.last_frame_time = time.perf_counter()
         return self
 
@@ -72,6 +71,9 @@ class Window(ti.ui.Window):
     ) -> bool:
         if max_frames and (self.frame_count >= max_frames):
             return False
+
+        if self.frame_count == 0:
+            self.start_time = time.perf_counter()
 
         if self.frame_interval > 0 and self.frame_count >= 0:
             assert self.video_manager is not None
