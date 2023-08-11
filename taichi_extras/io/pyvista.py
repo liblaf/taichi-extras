@@ -1,21 +1,24 @@
 from pathlib import Path
 
 import numpy as np
+import pyvista as pv
 import taichi as ti
+from pyvista import PolyData
 from taichi import MatrixField, MeshInstance
-from trimesh import Trimesh
 
 from taichi_extras.utils.mesh import element_field
 
 
-def write(filepath: Path, vertices: np.ndarray, faces: np.ndarray) -> None:
+def write(
+    filepath: Path, points: np.ndarray, faces: np.ndarray, *, binary: bool = True
+) -> None:
     """
     Parameters:
-        vertices: (n, 3)
-        faces   : (m, 3) or (m, 4)
+        points : (n, 3)
+        faces  : (m, 3) or (m, 4)
     """
-    tri_mesh: Trimesh = Trimesh(vertices=vertices, faces=faces)
-    tri_mesh.export(filepath)
+    mesh: PolyData = pv.make_tri_mesh(points=points, faces=faces)
+    mesh.save(filepath, binary=binary, recompute_normals=False)
 
 
 @ti.kernel
@@ -33,7 +36,9 @@ def get_faces(mesh: ti.MeshInstance) -> np.ndarray:
     return indices.to_numpy()
 
 
-def write_mesh(filepath: Path, mesh: MeshInstance, key: str = "position") -> None:
+def write_mesh(
+    filepath: Path, mesh: MeshInstance, key: str = "position", *, binary: bool = True
+) -> None:
     position: np.ndarray
     if key and key in mesh.verts.keys:
         position_field: MatrixField = mesh.verts.get_member_field("position")
@@ -41,4 +46,4 @@ def write_mesh(filepath: Path, mesh: MeshInstance, key: str = "position") -> Non
     else:
         position = mesh.get_position_as_numpy()
     indices: np.ndarray = get_faces(mesh=mesh)
-    write(filepath=filepath, vertices=position, faces=indices)
+    write(filepath=filepath, points=position, faces=indices, binary=binary)

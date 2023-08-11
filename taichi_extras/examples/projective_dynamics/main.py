@@ -19,7 +19,7 @@ from taichi_extras.examples.projective_dynamics.physics.dynamics import (
     init,
     projective_dynamics,
 )
-from taichi_extras.io import node, trimesh
+from taichi_extras.io import node, pyvista
 from taichi_extras.ui.camera import Camera
 from taichi_extras.ui.window import Window
 
@@ -46,9 +46,9 @@ def main(
             writable=False,
         ),
     ] = None,
-    frame_interval: Annotated[int, typer.Option("-i", "--frame-interval")] = 1,
     max_frames: Annotated[int, typer.Option("-f", "--max-frames")] = sys.maxsize,
     output: Annotated[Path, typer.Option("-o", "--output")] = Path.cwd() / "output",
+    record: Annotated[bool, typer.Option("--record/--no-record")] = True,
     show_window: Annotated[bool, typer.Option("-w", "--show-window")] = False
 ) -> None:
     mesh, faces = node.read_all(input, relations=["CE", "CV", "EV", "FV"])
@@ -65,10 +65,9 @@ def main(
     scene: Scene = Scene()
     window: Window = Window(
         name="Projective Dynamics",
-        res=(1280, 960),
-        show_window=show_window,
-        frame_interval=frame_interval,
         output_dir=output,
+        record=record,
+        show_window=show_window,
     )
     canvas: Canvas = window.get_canvas()
     camera.position(0.0, 0.0, 3.0)
@@ -80,7 +79,7 @@ def main(
 
     with window:
         while window.next_frame(max_frames=max_frames, track_user_input=camera):
-            if show_window or frame_interval > 0:
+            if record or show_window:
                 scene.mesh(
                     vertices=position,
                     indices=indices,
@@ -100,8 +99,10 @@ def main(
                 time_step=TIME_STEP,
             )
 
-    trimesh.write(output / "tri.off", vertices=position.to_numpy(), faces=faces)
-    trimesh.write_mesh(output / "tet.off", mesh=mesh)
+    pyvista.write(
+        output / "tri.ply", points=position.to_numpy(), faces=faces, binary=False
+    )
+    pyvista.write_mesh(output / "tet.ply", mesh=mesh, binary=False)
 
 
 if __name__ == "__main__":

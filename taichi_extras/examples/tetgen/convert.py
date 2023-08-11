@@ -4,7 +4,7 @@ from typing import Annotated
 import taichi as ti
 import typer
 
-from taichi_extras.io import node, trimesh
+from taichi_extras.io import node, pyvista
 
 ti.init()
 
@@ -22,9 +22,11 @@ def main(
             exists=False, file_okay=True, dir_okay=False, readable=False, writable=True
         ),
     ],
+    *,
+    binary: Annotated[bool, typer.Option("--binary/--ascii")] = True,
 ) -> None:
     mesh: ti.MeshInstance = node.read_mesh(input, relations=["FV"])
-    trimesh.write_mesh(output, mesh=mesh)
+    pyvista.write_mesh(output, mesh=mesh, binary=binary)
 
 
 if __name__ == "__main__":

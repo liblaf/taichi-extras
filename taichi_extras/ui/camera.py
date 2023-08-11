@@ -1,4 +1,3 @@
-import math
 import time
 
 import numpy as np
@@ -22,7 +21,7 @@ class Camera(ti.ui.Camera):
     ):
         """
         Move the camera according to user inputs.
-        Press `w`, `s`, `a`, `d`, `Space`, `Shift` to move the camera `forward`, `back`, `left`, `right`, `up`, `down`, accordingly.
+        Press `w`, `s`, `a`, `d`, `space`, `shift` to move the camera `forward`, `back`, `left`, `right`, `up`, `down`, accordingly.
 
         Parameters:
             window: a window instance.

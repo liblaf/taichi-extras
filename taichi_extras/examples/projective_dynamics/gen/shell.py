@@ -17,14 +17,12 @@ def main(
         typer.Argument(
             exists=False, file_okay=True, dir_okay=False, writable=True, readable=False
         ),
-    ]
+    ],
+    *,
+    nsub: Annotated[int, typer.Option("-s", "--sub")] = 3,
 ) -> None:
-    inner_sphere: PolyData = typing.cast(
-        PolyData, pv.Sphere(radius=0.5, direction=(0.0, 1.0, 0.0))
-    )
-    outer_sphere: PolyData = typing.cast(
-        PolyData, pv.Sphere(radius=1.0, direction=(0.0, 1.0, 0.0))
-    )
+    inner_sphere: PolyData = typing.cast(PolyData, pv.Icosphere(radius=0.5, nsub=nsub))
+    outer_sphere: PolyData = typing.cast(PolyData, pv.Icosphere(radius=1.0, nsub=nsub))
     inner_points, inner_indices = poly_data.get_vertices_indices(inner_sphere)
     outer_points, outer_indices = poly_data.get_vertices_indices(outer_sphere)
     points: np.ndarray = np.concatenate([inner_points, outer_points])

@@ -17,8 +17,8 @@ def compute_hessian_kernel(
         shape = Matrix.cols(
             [c.verts[i].position - c.verts[3].position for i in ti.static(range(3))]
         )
-        c.shape_undeformed_inverse = shape.inverse()
-        c.volume = ti.abs(shape.determinant()) / 6.0  # type: ignore
+        c.shape_undeformed_inverse = ti.math.inverse(shape)
+        c.volume = ti.abs(ti.math.determinant(shape)) / 6.0
         for v in c.verts:
             v.mass += mass_density * c.volume / 4.0
         hessian = Matrix.zero(dt=ti.f32, n=4, m=4)

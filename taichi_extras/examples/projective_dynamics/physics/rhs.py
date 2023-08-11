@@ -55,8 +55,9 @@ def compute_force_kernel(
         v.force += v.mass * gravity
 
     for v in mesh.verts:
-        if not ti.math.isnan(v.fixed).any():  # type: ignore
-            v.force += 0.5 * v.mass * fixed_stiffness * (v.fixed - v.position)
+        for i in ti.static(range(3)):
+            if not ti.math.isnan(v.fixed[i]):
+                v.force[i] += v.mass * fixed_stiffness * (v.fixed[i] - v.position[i])
 
 
 def compute_force(

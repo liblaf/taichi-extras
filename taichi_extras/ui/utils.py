@@ -4,7 +4,7 @@ from typing import cast
 import taichi as ti
 
 
-def clamp(x, xmin, xmax):
+def clamp(x: float, xmin: float, xmax: float) -> float:
     return max(xmin, min(xmax, x))
 
 
@@ -22,7 +22,7 @@ def vec_to_euler(v: ti.Vector) -> tuple[float, float]:
 
     sin_yaw: float = v[0] / math.cos(pitch)  # type: ignore
     cos_yaw: float = v[2] / math.cos(pitch)  # type: ignore
-    cos_yaw = clamp(x=cos_yaw, xmin=-1.0, xmax=+1.0)
+    cos_yaw = clamp(cos_yaw, xmin=-1.0, xmax=+1.0)
     yaw = math.acos(cos_yaw)
     if sin_yaw < 0:
         yaw = -yaw

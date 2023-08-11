@@ -55,6 +55,7 @@ repos:
     rev: "v3.0.1"
     hooks:
       - id: prettier
+        exclude: pnpm-lock.yaml
   - repo: https://github.com/dnephin/pre-commit-golang
     rev: "v0.5.1"
     hooks:
@@ -94,7 +95,7 @@ repos:
       - id: cmake-format
       - id: cmake-lint
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "0.23.3"
+    rev: "0.24.0"
     hooks:
       # - id: check-jsonschema
       # - id: check-metaschema

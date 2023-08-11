@@ -9,7 +9,6 @@
     "pyvista",
     "smesh",
     "taichi",
-    "trimesh",
     "typer",
     "undeformed",
     "verts",

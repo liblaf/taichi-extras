@@ -9,10 +9,10 @@ def positive_singular_value_decomposition_func(
     mat3 = U @ Sigma @ V.transpose()
     """
     U, Sigma, V = ti.svd(mat3)
-    if U.determinant() < 0.0:  # type: ignore
+    if ti.math.determinant(U) < 0.0:  # type: ignore
         U[:, 2] *= -1
         Sigma[2, 2] *= -1
-    if V.determinant() < 0.0:  # type: ignore
+    if ti.math.determinant(V) < 0.0:  # type: ignore
         V[:, 2] *= -1
         Sigma[2, 2] *= -1
     return U, Sigma, V

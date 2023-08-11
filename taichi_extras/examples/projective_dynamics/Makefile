@@ -7,7 +7,7 @@ OUTPUT := $(CURDIR)/output/$(TARGET)
 
 FIXED != if [[ -f $(CURDIR)/fixed/$(TARGET).py ]]; then echo true; else echo false; fi
 
-OPTIONS += --frame-interval=1
+OPTIONS += --no-record
 OPTIONS += --max-frames=$(shell echo $$((3 * 30)))
 # OPTIONS += --show-window
 ifeq ($(FIXED), true)
@@ -19,7 +19,7 @@ PYTHON := $(ENV) python
 
 TARGET_FILES += $(DATA)/undeformed.1.node
 TARGET_FILES += $(DATA)/undeformed.smesh
-TARGET_FILES += $(OUTPUT)/tet.off
+TARGET_FILES += $(OUTPUT)/tet.ply
 ifeq ($(FIXED), true)
   TARGET_FILES += $(DATA)/fixed.node
 endif
@@ -46,13 +46,13 @@ setup:
 test:
 	$(ENV) pytest --cov --cov-report=term --cov-report=term-missing
 
-view-tet: $(OUTPUT)/tet.off
+view-tet: $(OUTPUT)/tet.ply
 	meshlab $<
 
-view-tri: $(OUTPUT)/tri.off
+view-tri: $(OUTPUT)/tri.ply
 	meshlab $<
 
-view-undeformed: $(DATA)/undeformed.off
+view-undeformed: $(DATA)/undeformed.ply
 	meshlab $<
 
 #####################
@@ -72,11 +72,11 @@ $(DATA)/undeformed.smesh: $(GEN)/$(TARGET).py | $(DATA)
 	$(PYTHON) $< $@
 
 CONVERT := $(PYTHON) $(dir $(CURDIR))/tetgen/convert.py
-$(DATA)/undeformed.off: $(DATA)/undeformed.1.node
+$(DATA)/undeformed.ply: $(DATA)/undeformed.1.node
 	$(CONVERT) $< $@
 
 ifeq ($(FIXED), true)
   EXTRA_DATA_FILE_LIST += $(DATA)/fixed.node
 endif
-$(OUTPUT)/tet.off $(OUTPUT)/tri.off: $(DATA)/undeformed.1.node $(EXTRA_DATA_FILE_LIST) $(CURDIR)/main.py | $(OUTPUT)
+$(OUTPUT)/tet.ply $(OUTPUT)/tri.ply: $(DATA)/undeformed.1.node $(EXTRA_DATA_FILE_LIST) $(CURDIR)/main.py | $(OUTPUT)
 	$(PYTHON) $(CURDIR)/main.py $(OPTIONS) --output=$(@D) $<
