@@ -1,5 +1,3 @@
-from enum import StrEnum
-
 from taichi import Vector
 
 TOLERANCE: float = 1e-6
@@ -15,8 +13,3 @@ SHEAR_MODULUS: float = YOUNG_MODULUS / (2.0 * (1.0 + POISSON_RATIO))
 
 # fixed
 FIXED_STIFFNESS: float = 1e6
-
-
-class Method(StrEnum):
-    CG = "CG"  # Conjugate Gradient
-    Sparse = "Sparse"

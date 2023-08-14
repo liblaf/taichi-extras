@@ -3,7 +3,7 @@ from taichi import MatrixField, MeshInstance
 
 from taichi_extras.utils.mesh import element_field
 
-from .const import FIXED_STIFFNESS, TIME_STEP, TOLERANCE
+from .const import FIXED_STIFFNESS, TIME_STEP
 
 
 @ti.func
@@ -104,15 +104,12 @@ def conjugate_gradient(
     r.copy_from(b)
     p.copy_from(r)
     r_norm: float = dot_product(r, r)
-    r_norm_init: float = r_norm
     for _ in range(n_iter):
         compute_Ap(mesh=mesh, fixed_stiffness=fixed_stiffness, time_step=time_step)
         alpha: float = r_norm / dot_product(p, Ap)
         a_add_b_mul_c(result=x, a=x, b=alpha, c=p)
         a_add_b_mul_c(result=r, a=r, b=-alpha, c=Ap)
         r_norm_new: float = dot_product(r, r)
-        if r_norm_new < r_norm_init * (TOLERANCE**2):
-            break
         beta: float = r_norm_new / r_norm
         r_norm = r_norm_new
         a_add_b_mul_c(result=p, a=r, b=beta, c=p)

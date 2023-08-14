@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import pyvista as pv
@@ -10,7 +11,12 @@ from taichi_extras.utils.mesh import element_field
 
 
 def write(
-    filepath: Path, points: np.ndarray, faces: np.ndarray, *, binary: bool = True
+    filepath: Path,
+    points: np.ndarray,
+    faces: np.ndarray,
+    *,
+    binary: bool = True,
+    texture: Optional[str | np.ndarray] = None
 ) -> None:
     """
     Parameters:
@@ -18,7 +24,7 @@ def write(
         faces  : (m, 3) or (m, 4)
     """
     mesh: PolyData = pv.make_tri_mesh(points=points, faces=faces)
-    mesh.save(filepath, binary=binary, recompute_normals=False)
+    mesh.save(filepath, binary=binary, texture=texture, recompute_normals=False)
 
 
 @ti.kernel
@@ -37,7 +43,12 @@ def get_faces(mesh: ti.MeshInstance) -> np.ndarray:
 
 
 def write_mesh(
-    filepath: Path, mesh: MeshInstance, key: str = "position", *, binary: bool = True
+    filepath: Path,
+    mesh: MeshInstance,
+    key: str = "position",
+    *,
+    binary: bool = True,
+    texture: Optional[str | np.ndarray] = None
 ) -> None:
     position: np.ndarray
     if key and key in mesh.verts.keys:
@@ -46,4 +57,10 @@ def write_mesh(
     else:
         position = mesh.get_position_as_numpy()
     indices: np.ndarray = get_faces(mesh=mesh)
-    write(filepath=filepath, points=position, faces=indices, binary=binary)
+    write(
+        filepath=filepath,
+        points=position,
+        faces=indices,
+        binary=binary,
+        texture=texture,
+    )

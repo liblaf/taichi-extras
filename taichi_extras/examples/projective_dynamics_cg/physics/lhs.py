@@ -1,10 +1,9 @@
 import taichi as ti
 from taichi import Matrix, MeshInstance, Vector
-from taichi.linalg import SparseMatrix, SparseMatrixBuilder
 
 from taichi_extras.utils.mesh import element_field
 
-from .const import FIXED_STIFFNESS, MASS_DENSITY, SHEAR_MODULUS, TIME_STEP
+from .const import MASS_DENSITY, SHEAR_MODULUS
 
 
 @ti.kernel
@@ -51,6 +50,7 @@ def compute_hessian_kernel(
 
 def compute_hessian(
     mesh: MeshInstance,
+    *,
     mass_density: float = MASS_DENSITY,
     shear_modulus: float = SHEAR_MODULUS,
 ):
@@ -74,39 +74,3 @@ def compute_hessian(
         mass_density=mass_density,
         shear_modulus=shear_modulus,
     )
-
-
-@ti.kernel
-def get_A_kernel(
-    mesh: ti.template(),  # type: ignore
-    builder: ti.types.sparse_matrix_builder(),  # type: ignore
-    fixed_stiffness: float,
-    time_step: float,
-):
-    for v in mesh.verts:
-        for i in ti.static(range(3)):
-            result = v.mass / (time_step**2) + v.hessian
-            if not ti.math.isnan(v.fixed[i]):
-                result += fixed_stiffness * v.mass
-            builder[v.id * 3 + i, v.id * 3 + i] += result
-
-    for e in mesh.edges:
-        for i in ti.static(range(3)):
-            builder[e.verts[0].id * 3 + i, e.verts[1].id * 3 + i] += e.hessian
-            builder[e.verts[1].id * 3 + i, e.verts[0].id * 3 + i] += e.hessian
-
-
-def get_A(
-    mesh: MeshInstance,
-    fixed_stiffness: float = FIXED_STIFFNESS,
-    time_step: float = TIME_STEP,
-) -> SparseMatrix:
-    builder: SparseMatrixBuilder = SparseMatrixBuilder(
-        num_rows=len(mesh.verts) * 3,
-        num_cols=len(mesh.verts) * 3,
-        max_num_triplets=len(mesh.verts) * 3 + 2 * len(mesh.edges) * 3,
-    )
-    get_A_kernel(
-        mesh=mesh, builder=builder, fixed_stiffness=fixed_stiffness, time_step=time_step
-    )
-    return builder.build()

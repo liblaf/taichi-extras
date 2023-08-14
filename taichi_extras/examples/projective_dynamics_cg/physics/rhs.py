@@ -1,7 +1,5 @@
-from typing import cast
-
 import taichi as ti
-from taichi import Matrix, MatrixField, MeshInstance, ScalarNdarray, Vector
+from taichi import Matrix, MatrixField, MeshInstance, Vector
 
 from taichi_extras.utils.mesh import element_field
 
@@ -12,13 +10,13 @@ from .mathematics import positive_singular_value_decomposition_func
 @ti.kernel
 def compute_position_predict_kernel(
     mesh: ti.template(),  # type: ignore
-    time_step: ti.f32,
+    time_step: float,
 ):
     for v in mesh.verts:
         v.position_predict = v.position + time_step * v.velocity
 
 
-def compute_position_predict(mesh: MeshInstance, time_step: float = TIME_STEP):
+def compute_position_predict(mesh: MeshInstance, *, time_step: float = TIME_STEP):
     element_field.place_safe(
         field=mesh.verts, members={"position_predict": ti.math.vec3}
     )
@@ -28,9 +26,9 @@ def compute_position_predict(mesh: MeshInstance, time_step: float = TIME_STEP):
 @ti.kernel
 def compute_force_kernel(
     mesh: ti.template(),  # type: ignore
-    fixed_stiffness: ti.f32,
+    fixed_stiffness: float,
     gravity: ti.math.vec3,
-    shear_modulus: ti.f32,
+    shear_modulus: float,
 ):
     for c in mesh.cells:
         shape = Matrix.cols(
@@ -59,6 +57,7 @@ def compute_force_kernel(
 
 def compute_force(
     mesh: MeshInstance,
+    *,
     fixed_stiffness: float = FIXED_STIFFNESS,
     gravity: Vector = GRAVITY,
     shear_modulus: float = SHEAR_MODULUS,
@@ -89,12 +88,3 @@ def compute_b_kernel(
 def compute_b(mesh: MeshInstance, time_step: float = TIME_STEP) -> None:
     element_field.place_safe(field=mesh.verts, members={"b": ti.math.vec3})
     compute_b_kernel(mesh=mesh, time_step=time_step)
-
-
-def get_b(mesh: MeshInstance) -> ScalarNdarray:
-    b: ScalarNdarray = cast(
-        ScalarNdarray, ti.ndarray(dtype=ti.f32, shape=(len(mesh.verts) * 3,))
-    )
-    b_field: MatrixField = mesh.verts.get_member_field("b")
-    b.from_numpy(b_field.to_numpy().flatten())
-    return b

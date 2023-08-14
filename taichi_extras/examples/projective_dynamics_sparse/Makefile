@@ -1,6 +1,5 @@
-METHOD  ?= CG # Sparse
 TARGET  ?= bunny
-TI_ARCH ?= cuda
+TI_ARCH ?= x64
 
 DATA   := $(CURDIR)/data/$(TARGET)
 GEN    := $(CURDIR)/gen
@@ -8,11 +7,10 @@ OUTPUT := $(CURDIR)/output/$(TARGET)
 
 FIXED != if [[ -f $(CURDIR)/fixed/$(TARGET).py ]]; then echo true; else echo false; fi
 
+# OPTIONS += --position 0.0 0.0 3.0
+OPTIONS += --position 0.0 0.0 0.2 # bunny
+OPTIONS += --no-record
 OPTIONS += --max-frames=$(shell echo $$((3 * 30)))
-OPTIONS += --method=$(METHOD)
-# OPTIONS += --camera 0.0 0.0 3.0
-OPTIONS += --camera 0.0 0.0 0.26 # bunny
-OPTIONS += --record
 # OPTIONS += --show-window
 ifeq ($(FIXED), true)
   OPTIONS += --fixed=$(DATA)/fixed.node
@@ -70,7 +68,7 @@ $(DATA)/fixed.node: $(DATA)/undeformed.1.node $(CURDIR)/fixed/$(TARGET).py
 	$(PYTHON) $(CURDIR)/fixed/$(TARGET).py $< $@
 
 $(DATA)/undeformed.1.node: $(DATA)/undeformed.smesh
-	tetgen -p -Y -q -O -z -V $<
+	tetgen -zpqV $<
 
 $(DATA)/undeformed.smesh: $(GEN)/$(TARGET).py | $(DATA)
 	$(PYTHON) $< $@

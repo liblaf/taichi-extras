@@ -22,6 +22,9 @@ def compute_position_predict(mesh: MeshInstance, time_step: float = TIME_STEP):
     element_field.place_safe(
         field=mesh.verts, members={"position_predict": ti.math.vec3}
     )
+    assert "position" in mesh.verts.keys
+    assert "position_predict" in mesh.verts.keys
+    assert "velocity" in mesh.verts.keys
     compute_position_predict_kernel(mesh=mesh, time_step=time_step)
 
 
@@ -64,6 +67,11 @@ def compute_force(
     shear_modulus: float = SHEAR_MODULUS,
 ) -> None:
     element_field.place_safe(field=mesh.verts, members={"force": ti.math.vec3})
+    assert "shape_undeformed_inverse" in mesh.cells.keys
+    assert "volume" in mesh.cells.keys
+    assert "force" in mesh.verts.keys
+    assert "mass" in mesh.verts.keys
+    assert "position" in mesh.verts.keys
     force: MatrixField = mesh.verts.get_member_field("force")
     force.fill(0.0)
     compute_force_kernel(
@@ -88,6 +96,11 @@ def compute_b_kernel(
 
 def compute_b(mesh: MeshInstance, time_step: float = TIME_STEP) -> None:
     element_field.place_safe(field=mesh.verts, members={"b": ti.math.vec3})
+    assert "b" in mesh.verts.keys
+    assert "force" in mesh.verts.keys
+    assert "mass" in mesh.verts.keys
+    assert "position_predict" in mesh.verts.keys
+    assert "position" in mesh.verts.keys
     compute_b_kernel(mesh=mesh, time_step=time_step)
 
 
