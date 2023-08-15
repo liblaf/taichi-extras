@@ -1,4 +1,4 @@
-## Performance
+## Benchmark
 
 ### Shell
 
@@ -8,9 +8,9 @@
 
 | Method | Arch |   FPS | Time (s) |
 | :----: | :--: | ----: | -------: |
-|   CG   | cuda | 28.56 |     5.88 |
-| Sparse | cuda | 16.71 |    10.09 |
-| Sparse | x64  | 12.15 |    11.07 |
+|   CG   | cuda | 30.04 |     5.93 |
+| Sparse | cuda | 16.69 |    10.27 |
+| Sparse | x64  | 11.95 |    10.99 |
 
 ### Bunny
 
@@ -20,6 +20,6 @@
 
 | Method | Arch |   FPS | Time (s) |
 | :----: | :--: | ----: | -------: |
-|   CG   | cuda | 23.75 |     8.03 |
-| Sparse | x64  |  7.43 |    17.89 |
+|   CG   | cuda | 25.33 |     7.30 |
+| Sparse | x64  |  7.44 |    17.21 |
 | Sparse | cuda |     - |        - |
