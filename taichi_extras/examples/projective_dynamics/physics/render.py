@@ -1,9 +1,8 @@
 from typing import cast
 
-import matplotlib.cm
 import numpy as np
 import taichi as ti
-from matplotlib.colors import Colormap
+from matplotlib.cm import ScalarMappable
 from taichi import MatrixField, MeshInstance, ScalarField
 
 from taichi_extras.utils.mesh import element_field
@@ -23,9 +22,8 @@ def compute_color(mesh: MeshInstance) -> MatrixField:
     color: MatrixField = mesh.verts.get_member_field("color")
     displacement: ScalarField = mesh.verts.get_member_field("displacement")
     displacement_numpy: np.ndarray = displacement.to_numpy()
-    displacement_numpy /= max(displacement_numpy.max(), 1e-6)  # type: ignore
-    colormap: Colormap = matplotlib.cm.get_cmap("viridis")
-    color_numpy: np.ndarray = cast(np.ndarray, colormap(displacement_numpy))
-    color_numpy = color_numpy[:, :3]
-    color.from_numpy(color_numpy)
+    mappable: ScalarMappable = ScalarMappable()
+    rgba: np.ndarray = cast(np.ndarray, mappable.to_rgba(displacement_numpy))
+    rgb: np.ndarray = np.delete(rgba, -1, axis=-1)
+    color.from_numpy(rgb)
     return color

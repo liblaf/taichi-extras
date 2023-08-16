@@ -8,12 +8,13 @@ OUTPUT := $(CURDIR)/output/$(TARGET)
 
 FIXED != if [[ -f $(CURDIR)/fixed/$(TARGET).py ]]; then echo true; else echo false; fi
 
-OPTIONS += --max-frames=$(shell echo $$((3 * 30)))
-OPTIONS += --method=$(METHOD)
 # OPTIONS += --camera 0.0 0.0 3.0
 OPTIONS += --camera 0.0 0.0 0.26 # bunny
+OPTIONS += --max-frames=$(shell echo $$((3 * 30)))
+OPTIONS += --method=$(METHOD)
 OPTIONS += --record
 # OPTIONS += --show-window
+# OPTIONS += --fixed-stiffness=1e8
 ifeq ($(FIXED), true)
   OPTIONS += --fixed=$(DATA)/fixed.node
 endif
@@ -39,6 +40,8 @@ clean:
 	@ $(RM) --verbose $(CURDIR)/coverage.xml
 	@ find $(CURDIR) -name "__pycache__" -exec $(RM) --recursive --verbose {} +
 	@ find $(CURDIR) -name "*.pyc"       -exec $(RM) --verbose {} +
+
+diff: $(OUTPUT)/diff.ply
 
 pretty:
 	isort --profile=black $(CURDIR)
@@ -79,8 +82,21 @@ CONVERT := $(PYTHON) $(dir $(CURDIR))/tetgen/convert.py
 $(DATA)/undeformed.ply: $(DATA)/undeformed.1.node
 	$(CONVERT) $< $@
 
+DIFF := $(PYTHON) $(CURDIR)/utils/diff.py
+$(OUTPUT)/diff.ply: $(OUTPUT)/old.ply $(OUTPUT)/new.ply
+	$(DIFF) --output=$@ $^
+
 ifeq ($(FIXED), true)
   EXTRA_DATA_FILE_LIST += $(DATA)/fixed.node
 endif
+
+$(OUTPUT)/new.ply: $(DATA)/undeformed.1.node $(EXTRA_DATA_FILE_LIST) $(CURDIR)/main.py | $(OUTPUT)
+	$(PYTHON) $(CURDIR)/main.py $(OPTIONS) --output=$(@D) --no-record --fixed-stiffness=1e6 $<
+	@ install -D --mode="u=rw,go=r" --no-target-directory --verbose $(@D)/tri.ply $@
+
+$(OUTPUT)/old.ply: $(DATA)/undeformed.1.node $(EXTRA_DATA_FILE_LIST) $(CURDIR)/main.py | $(OUTPUT)
+	$(PYTHON) $(CURDIR)/main.py $(OPTIONS) --output=$(@D) --no-record --fixed-stiffness=1e5 $<
+	@ install -D --mode="u=rw,go=r" --no-target-directory --verbose $(@D)/tri.ply $@
+
 $(OUTPUT)/tet.ply $(OUTPUT)/tri.ply: $(DATA)/undeformed.1.node $(EXTRA_DATA_FILE_LIST) $(CURDIR)/main.py | $(OUTPUT)
 	$(PYTHON) $(CURDIR)/main.py $(OPTIONS) --output=$(@D) $<

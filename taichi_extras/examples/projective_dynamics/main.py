@@ -60,13 +60,16 @@ def main(
     output: Annotated[Path, typer.Option("-o", "--output")] = Path.cwd() / "output",
     record: Annotated[bool, typer.Option("--record/--no-record")] = True,
     show_window: Annotated[bool, typer.Option("-w", "--show-window")] = False,
+    fixed_stiffness: Annotated[
+        float, typer.Option("--fixed-stiffness")
+    ] = FIXED_STIFFNESS,
 ) -> None:
     time_start: float = time.perf_counter()
     mesh, faces = node.read_all(input, relations=["CE", "CV", "EV", "FV"])
     solver: Optional[SparseSolver] = init(
         mesh=mesh,
         fixed_filepath=fixed,
-        fixed_stiffness=FIXED_STIFFNESS,
+        fixed_stiffness=fixed_stiffness,
         mass_density=MASS_DENSITY,
         shear_modulus=SHEAR_MODULUS,
         time_step=TIME_STEP,
@@ -108,7 +111,7 @@ def main(
             projective_dynamics(
                 mesh=mesh,
                 solver=solver,
-                fixed_stiffness=FIXED_STIFFNESS,
+                fixed_stiffness=fixed_stiffness,
                 gravity=GRAVITY,
                 shear_modulus=SHEAR_MODULUS,
                 time_step=TIME_STEP,
