@@ -16,7 +16,7 @@ def read(filepath: Path, reverse: bool = True) -> np.ndarray:
     # <# of faces> <boundary marker (0 or 1)>
     num_faces, boundary_marker = map(int, lines[0].split())
     faces: np.ndarray = np.zeros(shape=(num_faces, 3), dtype=np.int32)
-    for line in lines[1:]:
+    for line in lines[1 : num_faces + 1]:
         # <face #> <node> <node> <node> [boundary marker]
         index, *verts = map(int, line.split())
         if boundary_marker:

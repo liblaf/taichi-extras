@@ -21,7 +21,7 @@ def read(filepath: Path) -> np.ndarray:
     assert dimension == 3
     assert num_attributes == 0
     points: np.ndarray = np.zeros(shape=(num_points, 3), dtype=np.float32)
-    for line in lines[1:]:
+    for line in lines[1 : num_points + 1]:
         # <point #> <x> <y> <z> [attributes] [boundary marker]
         index: int = int(line.split()[0])
         position: list[float] = list(map(float, line.split()[1:]))
