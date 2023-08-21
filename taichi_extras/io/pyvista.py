@@ -10,6 +10,12 @@ from taichi import MatrixField, MeshInstance
 from taichi_extras.utils.mesh import element_field
 
 
+def read_poly_data(filepath: Path) -> PolyData:
+    mesh = pv.read(filepath)
+    assert isinstance(mesh, PolyData)
+    return mesh
+
+
 def write(
     filepath: Path,
     points: np.ndarray,

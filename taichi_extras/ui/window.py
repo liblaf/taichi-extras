@@ -30,8 +30,7 @@ class Window(ti.ui.Window):
         *,
         automatic_build: bool = False,
         framerate: int = 30,
-        output_dir: Path = Path.cwd() / "output",
-        record: bool = True,
+        output_dir: Optional[Path] = Path.cwd() / "output",
     ) -> None:
         super().__init__(
             name=name,
@@ -42,7 +41,7 @@ class Window(ti.ui.Window):
             pos=pos,
         )
         self.show_window = show_window
-        if record:
+        if output_dir:
             self.video_manager = VideoManager(
                 output_dir=output_dir,
                 framerate=framerate,
