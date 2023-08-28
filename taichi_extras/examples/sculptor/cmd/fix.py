@@ -8,17 +8,9 @@ from pyvista import PolyData
 
 
 def main(
-    input: Annotated[
-        Path,
-        typer.Argument(
-            exists=True, file_okay=True, dir_okay=False, writable=False, readable=True
-        ),
-    ],
+    input: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
     output: Annotated[
-        Path,
-        typer.Argument(
-            exists=False, file_okay=True, dir_okay=False, writable=True, readable=False
-        ),
+        Path, typer.Argument(dir_okay=False, writable=True, readable=False)
     ],
     *,
     binary: Annotated[bool, typer.Option()] = True,
@@ -42,7 +34,10 @@ def main(
         joincomp=join_comp,
         remove_smallest_components=remove_smallest_components,
     )
-    mesh_fix.save(output, binary=binary)
+    mesh = mesh_fix.mesh
+    mesh.clean(inplace=True)
+    mesh.triangulate(inplace=True)
+    mesh.save(output, binary=binary)
 
 
 if __name__ == "__main__":

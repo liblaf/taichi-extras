@@ -24,6 +24,7 @@ from taichi_extras.physics.projective_dynamics.const import (
 )
 from taichi_extras.ui.camera import Camera
 from taichi_extras.ui.window import Window
+from taichi_extras.utils.mesh.mesh import get_bounding_box
 
 ti.init()
 
@@ -43,38 +44,18 @@ def init_fixed(
 
 
 def main(
-    mesh: Annotated[
-        Path,
-        typer.Argument(
-            exists=True, file_okay=True, dir_okay=False, writable=False, readable=True
-        ),
-    ],
-    topology: Annotated[
-        Path,
-        typer.Option(
-            exists=True, file_okay=True, dir_okay=False, writable=False, readable=True
-        ),
-    ],
-    inner: Annotated[
-        list[Path],
-        typer.Option(
-            exists=False, file_okay=True, dir_okay=False, writable=False, readable=True
-        ),
-    ],
+    mesh: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
+    topology: Annotated[Path, typer.Option(exists=True, dir_okay=False)],
+    inner: Annotated[list[Path], typer.Option(exists=False, dir_okay=False)],
     *,
     max_frames: Annotated[int, typer.Option()] = 90,
     output: Annotated[
-        Path,
-        typer.Option(
-            exists=False, file_okay=True, dir_okay=False, writable=True, readable=False
-        ),
+        Path, typer.Option(exists=False, dir_okay=False, writable=True, readable=False)
     ],
     show_window: Annotated[bool, typer.Option()] = False,
     video_dir: Annotated[
         Optional[Path],
-        typer.Option(
-            exists=True, file_okay=False, dir_okay=True, writable=True, readable=False
-        ),
+        typer.Option(exists=True, file_okay=False, writable=True, readable=False),
     ] = None,
 ) -> None:
     time_start: float = time.perf_counter()
@@ -106,7 +87,8 @@ def main(
         name="Projective Dynamics", output_dir=video_dir, show_window=show_window
     )
     canvas: Canvas = window.get_canvas()
-    camera.position(0.0, 0.0, 0.26)
+    bounding: np.ndarray = get_bounding_box(mesh=mesh_instance)
+    camera.adjust_position(axis=0, bounding=bounding)
     camera.lookat(0.0, 0.0, 0.0)
 
     position: ti.MatrixField = mesh_instance.verts.get_member_field("position")
@@ -121,6 +103,7 @@ def main(
                     vertices=position,
                     indices=indices,
                     per_vertex_color=color,
+                    two_sided=True,
                     show_wireframe=True,
                 )
                 scene.set_camera(camera=camera)

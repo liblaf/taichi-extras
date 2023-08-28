@@ -12,25 +12,10 @@ from taichi_extras.pyvista import poly_data
 
 
 def main(
-    outer: Annotated[
-        Path,
-        typer.Argument(
-            exists=True, file_okay=True, dir_okay=False, writable=False, readable=True
-        ),
-    ],
-    inner: Annotated[
-        list[Path],
-        typer.Argument(
-            exists=True, file_okay=True, dir_okay=False, writable=False, readable=True
-        ),
-    ],
+    outer: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
+    inner: Annotated[list[Path], typer.Argument(exists=True, dir_okay=False)],
     *,
-    output: Annotated[
-        Path,
-        typer.Option(
-            exists=False, file_okay=True, dir_okay=False, writable=True, readable=False
-        ),
-    ]
+    output: Annotated[Path, typer.Option(dir_okay=False, writable=True, readable=False)]
 ) -> None:
     outer_mesh: PolyData = io_pv.read_poly_data(outer)
     inner_meshes: list[PolyData] = list(map(io_pv.read_poly_data, inner))

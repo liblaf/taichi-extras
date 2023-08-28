@@ -55,7 +55,6 @@ repos:
     rev: "v3.0.2"
     hooks:
       - id: prettier
-        exclude: pnpm-lock.yaml
   - repo: https://github.com/dnephin/pre-commit-golang
     rev: "v0.5.1"
     hooks:
@@ -82,10 +81,9 @@ repos:
     hooks:
       - id: isort
         args:
-          - --profile
-          - black
+          - --profile=black
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: "3.6.0"
+    rev: "3.7.0"
     hooks:
       - id: commitizen
       # - id: commitizen-branch
@@ -95,7 +93,7 @@ repos:
       - id: cmake-format
       - id: cmake-lint
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "0.24.1"
+    rev: "0.26.3"
     hooks:
       # - id: check-jsonschema
       # - id: check-metaschema
@@ -127,8 +125,7 @@ repos:
         args:
           - --write
           - --simplify
-          - --indent
-          - "2"
+          - --indent=2
           - --case-indent
           - --space-redirects
       # - id: shfmt-docker

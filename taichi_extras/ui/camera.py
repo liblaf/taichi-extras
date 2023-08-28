@@ -2,6 +2,7 @@ import time
 
 import numpy as np
 import taichi as ti
+from taichi import Vector
 
 from .utils import euler_to_vec, vec_to_euler
 
@@ -11,6 +12,20 @@ class Camera(ti.ui.Camera):
     last_mouse_y: float = np.nan
     last_time: float = np.nan
 
+    def adjust_position(
+        self, axis: int, bounding: np.ndarray, fov: float = np.deg2rad(45)
+    ) -> None:
+        bounding = np.reshape(bounding, newshape=(2, 3))
+        self.lookat(*np.mean(bounding, axis=0))
+        distance: float = (np.max(bounding[1] - bounding[0]) / 2.0) * (
+            1.0 + 1.0 / np.tan(fov / 2.0)
+        )
+        position: Vector = Vector([0.0, 0.0, 0.0])
+        position[axis] = distance
+        position *= 0.8
+        position += self.curr_lookat
+        self.position(*[position[i] for i in range(3)])
+
     def track_user_inputs(
         self: ti.ui.Camera,
         window: ti.ui.Window,
@@ -18,7 +33,7 @@ class Camera(ti.ui.Camera):
         yaw_speed: float = 1.0,
         pitch_speed: float = 1.0,
         hold_key=ti.ui.LMB,
-    ):
+    ) -> None:
         """
         Move the camera according to user inputs.
         Press `w`, `s`, `a`, `d`, `space`, `shift` to move the camera `forward`, `back`, `left`, `right`, `up`, `down`, accordingly.

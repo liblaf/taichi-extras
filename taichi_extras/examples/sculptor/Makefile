@@ -1,10 +1,12 @@
-TARGET := bunny
+TARGET := sculptor
 
 DATA := $(CURDIR)/data/$(TARGET)
 
 all: result
 
 include $(CURDIR)/make/$(TARGET).mk
+
+INNER_END != echo $$(($(NUM_INNER) - 1))
 
 RAW_OUTER    := $(DATA)/raw/outer.ply
 RAW_INNER    != echo $(DATA)/raw/inner/{00..$(INNER_END)}.ply
@@ -48,7 +50,7 @@ CMD_FIX      := python $(CMD)/fix.py --binary --no-join-comp --remove-smallest-c
 CMD_TOPOLOGY := python $(CMD)/topology.py
 CMD_MERGE    := python $(CMD)/merge.py
 CMD_TETGEN   := tetgen -p -Y -q -O -z -V
-CMD_SIMULATE := python $(CMD)/simulate.py --max-frames=90 --no-show-window --video-dir=$(DATA)/result
+CMD_SIMULATE := python $(CMD)/simulate.py --max-frames=90 --no-show-window # --video-dir=$(DATA)/result
 CMD_SPLIT    := python $(CMD)/split.py
 
 $(DATA)/before/%.ply: $(DATA)/raw/%.ply $(CMD)/fix.py
