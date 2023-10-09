@@ -18,10 +18,10 @@ def find_enclosed_point(surface: PolyData, max_iter: int = 1000) -> np.ndarray:
     raise RuntimeError("Failed to find inner point")
 
 
-def get_vertices_indices(mesh: PolyData) -> tuple[np.ndarray, np.ndarray]:
-    vertices: np.ndarray = mesh.points.copy()
-    indices: np.ndarray = mesh.faces.reshape(-1, 4)[:, 1:]
-    return vertices, indices
+def get_points_faces(mesh: PolyData) -> tuple[np.ndarray, np.ndarray]:
+    points: np.ndarray = mesh.points.copy()
+    faces: np.ndarray = mesh.faces.reshape(-1, 4)[:, 1:].copy()
+    return points, faces
 
 
 def make_mesh(points: np.ndarray, faces: np.ndarray) -> PolyData:

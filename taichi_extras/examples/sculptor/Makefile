@@ -1,36 +1,40 @@
-TARGET := sculptor
+TARGET := chin
 
-DATA := $(CURDIR)/data/$(TARGET)
+DATA   := $(CURDIR)/data/$(TARGET)
+AFTER  := $(DATA)/after
+BEFORE := $(DATA)/before
+RAW    := $(DATA)/raw
+OUTPUT := $(DATA)/output
+VIDEO  := $(DATA)/video
 
-all: result
+all: output
+
+CONFIG            := $(DATA)/config.yaml
+RAW_COMPONENTS    :=
+BEFORE_COMPONENTS :=
+BEFORE_ALL        := $(BEFORE)/all.smesh
+BEFORE_TET        != echo $(BEFORE)/all.1.{edge,ele,face,node}
+AFTER_COMPONENTS  :=
+OUTPUT_TET        != echo $(OUTPUT)/all.1.{edge,ele,face,node}
+OUTPUT_COMPONENTS :=
 
 include $(CURDIR)/make/$(TARGET).mk
 
-INNER_END != echo $$(($(NUM_INNER) - 1))
-
-RAW_OUTER    := $(DATA)/raw/outer.ply
-RAW_INNER    != echo $(DATA)/raw/inner/{00..$(INNER_END)}.ply
-BEFORE_OUTER := $(DATA)/before/outer.ply
-BEFORE_INNER != echo $(DATA)/before/inner/{00..$(INNER_END)}.ply
-TOPOLOGY     := $(DATA)/topology.txt
-BEFORE_ALL   := $(DATA)/before/tet/all.smesh
-BEFORE_TET   != echo $(DATA)/before/tet/all.1.{edge,ele,face,node}
-# AFTER_INNER  :=
-RESULT_TET   != echo $(DATA)/result/tet/all.1.{edge,ele,face,node}
-RESULT_OUTER := $(DATA)/result/outer.ply
-RESULT_INNER != echo $(DATA)/result/inner/{00..$(INNER_END)}.ply
-
 clean:
-	@ $(RM) --recursive --verbose $(CURDIR)/data
+	@ $(RM) --recursive --verbose $(AFTER)
+	@ $(RM) --recursive --verbose $(BEFORE)
+	@ $(RM) --recursive --verbose $(RAW)
+	@ $(RM) --recursive --verbose $(OUTPUT)
+	@ $(RM) --recursive --verbose $(VIDEO)
 	@ $(RM) --verbose imgui.ini
 
 pretty: black prettier
 
-FILES += $(RAW_OUTER) $(RAW_INNER)
-FILES += $(BEFORE_OUTER) $(BEFORE_INNER) $(TOPOLOGY) $(BEFORE_ALL) $(BEFORE_TET)
-FILES += $(AFTER_INNER)
-FILES += $(RESULT_TET) $(RESULT_OUTER) $(RESULT_INNER)
-result: $(FILES)
+OUTPUTS += $(RAW_COMPONENTS)
+OUTPUTS += $(BEFORE_COMPONENTS) $(BEFORE_ALL) $(BEFORE_TET)
+OUTPUTS += $(AFTER_COMPONENTS)
+OUTPUTS += $(OUTPUT_TET) $(OUTPUT_COMPONENTS)
+output: $(OUTPUTS)
 
 #####################
 # Auxiliary Targets #
@@ -46,35 +50,31 @@ prettier:
 	prettier --write $(CURDIR)
 
 CMD          := $(CURDIR)/cmd
-CMD_FIX      := python $(CMD)/fix.py --binary --no-join-comp --remove-smallest-components --verbose
-CMD_TOPOLOGY := python $(CMD)/topology.py
+CMD_FIX      := python $(CMD)/fix.py --binary --join-comp --remove-smallest-components --verbose
 CMD_MERGE    := python $(CMD)/merge.py
-CMD_TETGEN   := tetgen -p -Y -q -O -z -V
-CMD_SIMULATE := python $(CMD)/simulate.py --max-frames=90 --no-show-window # --video-dir=$(DATA)/result
-CMD_SPLIT    := python $(CMD)/split.py
+CMD_TETGEN   := tetgen -p -Y -q -A -O -z -V
+CMD_SIMULATE := python $(CMD)/simulate.py --max-frames=90 --no-show-window --video-dir=$(VIDEO)
 
-$(DATA)/before/%.ply: $(DATA)/raw/%.ply $(CMD)/fix.py
+$(BEFORE)/%.ply: $(RAW)/%.ply $(CMD)/fix.py
 	@ mkdir --parents --verbose $(@D)
 	$(CMD_FIX) $< $@
 
-$(TOPOLOGY): $(BEFORE_OUTER) $(BEFORE_INNER) $(CMD)/topology.py
+$(BEFORE_ALL): $(CONFIG) $(BEFORE_COMPONENTS) $(AFTER_COMPONENTS) $(CMD)/merge.py
 	@ mkdir --parents --verbose $(@D)
-	$(CMD_TOPOLOGY) --output=$@ $(BEFORE_OUTER) $(BEFORE_INNER)
+	$(CMD_MERGE) --prefix=$(DATA) $< $@
 
-$(BEFORE_ALL): $(BEFORE_OUTER) $(BEFORE_INNER) $(CMD)/merge.py
-	@ mkdir --parents --verbose $(@D)
-	$(CMD_MERGE) --output=$@ $(BEFORE_OUTER) $(BEFORE_INNER)
-
-$(subst .1.,%,$(BEFORE_TET)): $(BEFORE_ALL)
+$(BEFORE)/%.1.edge $(BEFORE)/%.1.ele $(BEFORE)/%.1.face $(BEFORE)/%.1.node: $(BEFORE)/%.smesh
 	$(CMD_TETGEN) $<
 
-$(DATA)/result/tet/all.1.node: $(TOPOLOGY) $(BEFORE_TET) $(AFTER_INNER) $(CMD)/simulate.py
-	@ mkdir --parents --verbose $(@D)
-	$(CMD_SIMULATE) --topology=$(TOPOLOGY) $(addprefix --inner=, $(AFTER_INNER)) --output=$@ $(DATA)/before/tet/all.1.node
-
-$(DATA)/result/tet/all.1.%: $(DATA)/before/tet/all.1.%
+$(OUTPUT)/%.1.edge: $(BEFORE)/%.1.edge
 	@ install -D --mode="u=rw,go=r" --no-target-directory --verbose $< $@
 
-$(subst .,%,$(RESULT_OUTER) $(RESULT_INNER)): $(DATA)/result/tet/all.1.node $(BEFORE_OUTER) $(BEFORE_INNER) $(TOPOLOGY) $(CMD)/split.py
-	@ mkdir --parents --verbose $(DATA)/result/inner
-	$(CMD_SPLIT) --node=$< --topology=$(TOPOLOGY) --output=$(DATA)/result $(BEFORE_OUTER) $(BEFORE_INNER)
+$(OUTPUT)/%.1.ele: $(BEFORE)/%.1.ele
+	@ install -D --mode="u=rw,go=r" --no-target-directory --verbose $< $@
+
+$(OUTPUT)/%.1.face: $(BEFORE)/%.1.face
+	@ install -D --mode="u=rw,go=r" --no-target-directory --verbose $< $@
+
+$(OUTPUT)/%.1.node: $(BEFORE)/%.1.node $(CONFIG) $(CMD)/simulate.py
+	@ mkdir --parents --verbose $(VIDEO)
+	$(CMD_SIMULATE) --config=$(CONFIG) --output=$@ $<

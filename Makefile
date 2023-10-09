@@ -14,8 +14,9 @@ clean: tetgen-clean
 pretty: black prettier
 
 setup: $(SCRIPTS)/setup-cuda.sh tetgen-install
-	poetry install
 	bash $<
+	pip install open3d
+	poetry install
 
 test:
 	pytest --cov --cov-report=xml

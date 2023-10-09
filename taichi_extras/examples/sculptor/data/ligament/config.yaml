@@ -1,0 +1,38 @@
+camera:
+  position: [0., 0., 2.5]
+  lookat: [0., 0., 0.]
+
+components:
+  - filename: face.ply
+  - filename: ligament.ply
+    cell_attrs:
+      region_number: -1
+      stiffness: 1.e+7
+  - filename: skull_left.ply
+    cell_attrs:
+      hole: true
+    vert_attrs:
+      stiffness_fixed: 1.e+9
+  - filename: skull_right.ply
+    cell_attrs:
+      hole: true
+    vert_attrs:
+      stiffness_fixed: 1.e+9
+
+constants:
+  gravity: [0., -9.8, 0.]
+  time_step: 0.03
+  tolerance: 1.e-6
+
+default:
+  cell_attrs:
+    hole: false
+    mass_density: 1.e+3
+    region_number: 0
+    stiffness: 1.e+5
+    strain_limit: [1., 1.] # min, max
+  vert_attrs:
+    color: [0, 0, 0]
+    point_boundary_marker: 0
+    points_fixed: all
+    stiffness_fixed: 0.

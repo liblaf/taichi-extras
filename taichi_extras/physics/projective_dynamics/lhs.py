@@ -1,32 +1,26 @@
 import taichi as ti
-from taichi import Matrix, MeshInstance, Vector
-from taichi.linalg import SparseMatrix, SparseMatrixBuilder
+from taichi import Matrix, MatrixField, MeshInstance, Vector
 
-from taichi_extras.utils.mesh import element_field
+from taichi_extras.lang.mesh import mesh_element_field
 
-from .const import FIXED_STIFFNESS, MASS_DENSITY, SHEAR_MODULUS, TIME_STEP
+from .config import Constants
 
 
 @ti.kernel
-def compute_hessian_kernel(
-    mesh: ti.template(),  # type: ignore
-    mass_density: float,
-    shear_modulus: float,
-):
+def compute_A_kernel(mesh: ti.template(), time_step: float):  # type: ignore
     for c in mesh.cells:
-        shape = Matrix.cols(
+        shA_matmul_pe = Matrix.cols(
             [c.verts[i].position - c.verts[3].position for i in ti.static(range(3))]
         )
-        c.shape_undeformed_inverse = ti.math.inverse(shape)
-        c.volume = ti.abs(ti.math.determinant(shape)) / 6.0
+        c.shape_undeformed_inv = ti.math.inverse(shA_matmul_pe)
+        c.volume = ti.abs(ti.math.determinant(shA_matmul_pe)) / 6.0
         for v in c.verts:
-            v.mass += mass_density * c.volume / 4.0
-        hessian = Matrix.zero(dt=float, n=4, m=4)
+            v.mass += c.mass_density * c.volume / 4.0
         H = (
-            shear_modulus
+            c.stiffness
             * c.volume
-            * c.shape_undeformed_inverse  # type: ignore
-            @ c.shape_undeformed_inverse.transpose()  # type: ignore
+            * c.shape_undeformed_inv
+            @ c.shape_undeformed_inv.transpose()
         )
         hessian = Matrix.zero(dt=float, n=4, m=4)
         for i in ti.static(range(3)):
@@ -35,11 +29,9 @@ def compute_hessian_kernel(
                 hessian[i, 3] -= H[i, j]
                 hessian[3, j] -= H[i, j]
                 hessian[3, 3] += H[i, j]
-
         for z in ti.static(range(4)):
             v = c.verts[z]
             v.hessian += hessian[z, z]
-
         for e in c.edges:
             u = Vector([0, 0])
             for i in ti.static(range(2)):
@@ -47,66 +39,50 @@ def compute_hessian_kernel(
                     if e.verts[i].id == c.verts[j].id:
                         u[i] = j
             e.hessian += hessian[u[0], u[1]]
+    for e in mesh.edges:
+        e.A = e.hessian
+    for v in mesh.verts:
+        v.hessian += v.stiffness_fixed * v.mass
+        v.A = v.mass / time_step**2 + v.hessian
 
 
-def compute_hessian(
-    mesh: MeshInstance,
-    mass_density: float = MASS_DENSITY,
-    shear_modulus: float = SHEAR_MODULUS,
-) -> None:
-    element_field.place_safe(
+def compute_A(mesh: MeshInstance, constants: Constants) -> None:
+    mesh_element_field.place(
         field=mesh.cells,
         members={
-            "shape_undeformed_inverse": ti.math.mat3,
+            "shape_undeformed_inv": ti.math.mat3,
             "volume": float,
         },
     )
-    element_field.place_safe(field=mesh.edges, members={"hessian": float})
-    element_field.place_safe(
+    mesh_element_field.place(
+        field=mesh.edges,
+        members={
+            "A": float,
+            "hessian": float,
+        },
+    )
+    mesh_element_field.place(
         field=mesh.verts,
         members={
+            "A": float,
             "hessian": float,
             "mass": float,
         },
     )
-    compute_hessian_kernel(
-        mesh=mesh,
-        mass_density=mass_density,
-        shear_modulus=shear_modulus,
-    )
+    compute_A_kernel(mesh=mesh, time_step=constants.time_step)
 
 
 @ti.kernel
-def get_A_kernel(
-    mesh: ti.template(),  # type: ignore
-    builder: ti.types.sparse_matrix_builder(),  # type: ignore
-    fixed_stiffness: float,
-    time_step: float,
-):
-    for v in mesh.verts:
-        for i in ti.static(range(3)):
-            result = v.mass / (time_step**2) + v.hessian
-            if not ti.math.isnan(v.fixed[i]):
-                result += fixed_stiffness * v.mass
-            builder[v.id * 3 + i, v.id * 3 + i] += result
-
+def A_matmul_p_kernel(mesh: ti.template()):  # type: ignore
     for e in mesh.edges:
-        for i in ti.static(range(3)):
-            builder[e.verts[0].id * 3 + i, e.verts[1].id * 3 + i] += e.hessian
-            builder[e.verts[1].id * 3 + i, e.verts[0].id * 3 + i] += e.hessian
+        e.verts[0].A_matmul_p += e.A * e.verts[1].p
+        e.verts[1].A_matmul_p += e.A * e.verts[0].p
+    for v in mesh.verts:
+        v.A_matmul_p += v.A * v.p
 
 
-def get_A(
-    mesh: MeshInstance,
-    fixed_stiffness: float = FIXED_STIFFNESS,
-    time_step: float = TIME_STEP,
-) -> SparseMatrix:
-    builder: SparseMatrixBuilder = SparseMatrixBuilder(
-        num_rows=len(mesh.verts) * 3,
-        num_cols=len(mesh.verts) * 3,
-        max_num_triplets=len(mesh.verts) * 3 + 2 * len(mesh.edges) * 3,
-    )
-    get_A_kernel(
-        mesh=mesh, builder=builder, fixed_stiffness=fixed_stiffness, time_step=time_step
-    )
-    return builder.build()
+def A_matmul_p(mesh: MeshInstance) -> None:
+    mesh_element_field.place(field=mesh.verts, members={"A_matmul_p": ti.math.vec3})
+    A_matmul_p: MatrixField = mesh.verts.get_member_field("A_matmul_p")
+    A_matmul_p.fill(0.0)
+    A_matmul_p_kernel(mesh=mesh)

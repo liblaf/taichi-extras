@@ -1,0 +1,34 @@
+camera:
+  position: [150., -50., 50.]
+  lookat: [0., -50., 50.]
+
+components:
+  - filename: face.ply
+  - filename: mandible.ply
+    cell_attrs:
+      hole: true
+    vert_attrs:
+      stiffness_fixed: 1.e+5
+  # - filename: skull.ply
+  #   cell_attrs:
+  #     hole: true
+  #   vert_attrs:
+  #     stiffness_fixed: 1.e+7
+
+constants:
+  gravity: [0., 0., 0.]
+  time_step: 0.01
+  tolerance: 1.e-3
+
+default:
+  cell_attrs:
+    hole: false
+    mass_density: 1.
+    region_number: 0
+    stiffness: 1.e+5
+    strain_limit: [1., 1.] # min, max
+  vert_attrs:
+    color: [0, 0, 0]
+    point_boundary_marker: 0
+    points_fixed: all
+    stiffness_fixed: 0.

@@ -6,6 +6,8 @@ import typer
 from pymeshfix import MeshFix
 from pyvista import PolyData
 
+from taichi_extras.typer.run import run as typer_run
+
 
 def main(
     input: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
@@ -41,4 +43,4 @@ def main(
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    typer_run(main)

@@ -30,7 +30,7 @@ class Window(ti.ui.Window):
         *,
         automatic_build: bool = False,
         framerate: int = 30,
-        output_dir: Optional[Path] = Path.cwd() / "output",
+        output_dir: Optional[Path] = Path.cwd() / "video",
     ) -> None:
         super().__init__(
             name=name,
@@ -56,9 +56,9 @@ class Window(ti.ui.Window):
     def __exit__(self, *args, **kwargs) -> None:
         self.running = False
         fps: float = self.frame_count / (self.last_frame_time - self.start_time)
-        logging.info(f"FPS: {fps:.2f}")
+        logging.info(f"FPS Average: {fps:.2f}")
         if self.video_manager:
-            self.video_manager.make_video(mp4=True, gif=True)
+            self.video_manager.make_video(mp4=True, gif=False)
 
     def next_frame(
         self,
@@ -70,7 +70,6 @@ class Window(ti.ui.Window):
             self.show()
             if track_user_input:
                 track_user_input.track_user_inputs(window=self)
-
         if self.video_manager and self.frame_count >= 0:
             image_buffer: np.ndarray = self.get_image_buffer_as_numpy()
             self.video_manager.write_frame(image_buffer)
@@ -78,12 +77,10 @@ class Window(ti.ui.Window):
         # new frame
 
         self.frame_count += 1
-        self.frame_duration = time.perf_counter() - self.last_frame_time
-        self.last_frame_time = time.perf_counter()
-
         if self.frame_count == 0:
             self.start_time = time.perf_counter()
-
+        self.frame_duration = time.perf_counter() - self.last_frame_time
+        self.last_frame_time = time.perf_counter()
         if max_frames and (self.frame_count >= max_frames):
             return False
 

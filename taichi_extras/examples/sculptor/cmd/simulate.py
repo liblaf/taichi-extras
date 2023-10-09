@@ -1,52 +1,27 @@
 import logging
 import time
-from collections.abc import Sequence
 from pathlib import Path
 from typing import Annotated, Optional
 
-import numpy as np
 import taichi as ti
 import typer
-from pyvista import PolyData
-from taichi import MatrixField, MeshInstance
+from taichi import MatrixField, ScalarField
 from taichi.ui import Canvas, Scene
 
-from taichi_extras.io import node
-from taichi_extras.io import pyvista as io_pv
-from taichi_extras.physics.projective_dynamics import dynamics, fixed, render
-from taichi_extras.physics.projective_dynamics.const import (
-    FIXED_STIFFNESS,
-    GRAVITY,
-    MASS_DENSITY,
-    SHEAR_MODULUS,
-    TIME_STEP,
-    Method,
-)
+from taichi_extras.io import node, tetgen
+from taichi_extras.io.tetgen import TetMesh
+from taichi_extras.physics.projective_dynamics import dynamics, init, visual
+from taichi_extras.physics.projective_dynamics.config import Config
+from taichi_extras.typer.run import run as typer_run
 from taichi_extras.ui.camera import Camera
 from taichi_extras.ui.window import Window
-from taichi_extras.utils.mesh.mesh import get_bounding_box
 
 ti.init()
 
 
-def init_fixed(
-    mesh: MeshInstance, topology: np.ndarray, inner: Sequence[Optional[PolyData]]
-) -> None:
-    assert topology.shape == (1 + len(inner),)
-    position: np.ndarray = np.nan * np.ones(shape=(len(mesh.verts), 3))
-    for i, inner_mesh in enumerate(inner):
-        if not inner_mesh:
-            continue
-        begin: int = topology[i]
-        end: int = topology[i + 1]
-        position[begin:end] = inner_mesh.points
-    fixed.init_fixed(mesh=mesh, position=position)
-
-
 def main(
     mesh: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
-    topology: Annotated[Path, typer.Option(exists=True, dir_okay=False)],
-    inner: Annotated[list[Path], typer.Option(exists=False, dir_okay=False)],
+    config: Annotated[Path, typer.Option(exists=True, dir_okay=False)],
     *,
     max_frames: Annotated[int, typer.Option()] = 90,
     output: Annotated[
@@ -59,46 +34,29 @@ def main(
     ] = None,
 ) -> None:
     time_start: float = time.perf_counter()
-    mesh_instance, faces = node.read_all(mesh, relations=["CE", "CV", "EV", "FV"])
-    dynamics.init(
-        mesh=mesh_instance,
-        fixed_stiffness=FIXED_STIFFNESS,
-        mass_density=MASS_DENSITY,
-        shear_modulus=SHEAR_MODULUS,
-        time_step=TIME_STEP,
-        method=Method.CG,
-    )
-    init_fixed(
-        mesh=mesh_instance,
-        topology=np.loadtxt(topology, dtype=int),
-        inner=list(
-            map(
-                lambda filepath: None
-                if filepath.name == "EMPTY"
-                else io_pv.read_poly_data(filepath),
-                inner,
-            )
-        ),
-    )
-
+    config_model: Config = Config.load_yaml(config)
+    tet_mesh: TetMesh = tetgen.read_all(mesh, relations=["CE", "CV", "EV"])
     camera: Camera = Camera()
     scene: Scene = Scene()
     window: Window = Window(
         name="Projective Dynamics", output_dir=video_dir, show_window=show_window
     )
     canvas: Canvas = window.get_canvas()
-    bounding: np.ndarray = get_bounding_box(mesh=mesh_instance)
-    camera.adjust_position(axis=0, bounding=bounding)
-    camera.lookat(0.0, 0.0, 0.0)
+    camera.lookat(*config_model.camera.lookat)
+    camera.position(*config_model.camera.position)
 
-    position: ti.MatrixField = mesh_instance.verts.get_member_field("position")
-    indices: ti.ScalarField = ti.field(dtype=ti.i32, shape=(faces.size,))
-    indices.from_numpy(faces.flatten())
+    tet_mesh.instance.verts.place({"position": ti.math.vec3})
+    position: MatrixField = tet_mesh.instance.verts.get_member_field("position")
+    position.from_numpy(tet_mesh.instance.get_position_as_numpy())
+    indices: ScalarField = ti.field(dtype=ti.i32, shape=(tet_mesh.faces.size,))
+    indices.from_numpy(tet_mesh.faces.flatten())
+
+    init.init(mesh=tet_mesh, config=config_model)
 
     with window:
         while window.next_frame(max_frames=max_frames, track_user_input=camera):
             if video_dir or show_window:
-                color: MatrixField = render.compute_color(mesh=mesh_instance)
+                color: MatrixField = visual.compute_color(mesh=tet_mesh.instance)
                 scene.mesh(
                     vertices=position,
                     indices=indices,
@@ -107,21 +65,18 @@ def main(
                     show_wireframe=True,
                 )
                 scene.set_camera(camera=camera)
-                scene.ambient_light(color=(0.5, 0.5, 0.5))
-                scene.point_light(pos=(2.0, 2.0, 2.0), color=(2.0, 2.0, 2.0))
+                scene.ambient_light(color=(1.0, 1.0, 1.0))
                 canvas.scene(scene=scene)
-
             dynamics.projective_dynamics(
-                mesh=mesh_instance,
-                fixed_stiffness=FIXED_STIFFNESS,
-                gravity=GRAVITY,
-                shear_modulus=SHEAR_MODULUS,
-                time_step=TIME_STEP,
+                mesh=tet_mesh.instance,
+                constants=config_model.constants,
+                n_projective_dynamics_iter=8,
+                n_conjugate_gradient_iter=1024,
             )
     time_end: float = time.perf_counter()
     logging.info(f"Elapsed Time: {time_end - time_start} s")
-    node.write(output, position=position.to_numpy())
+    node.write(output, points=position.to_numpy())
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    typer_run(main)

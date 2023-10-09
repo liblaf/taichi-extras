@@ -1,1 +1,5 @@
-data
+data/*/after/
+data/*/before/
+data/*/output/
+data/*/raw/
+data/*/video/
