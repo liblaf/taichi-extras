@@ -2,33 +2,31 @@
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core"]
 
-[tool.isort]
-profile = "black"
-
 [tool.poetry]
 authors = ["liblaf <i@liblaf.me>"]
-description = ""
+description = "Simple utils & patches for Taichi"
 license = "MIT"
 name = "taichi-extras"
-packages = [{ include = "taichi_extras" }]
 readme = "README.md"
-repository = "https://github.com/liblaf/taichi-extras"
 version = "0.1.0"
 
 [tool.poetry.dependencies]
-matplotlib = "^3.7.2"
-meshio = { extras = ["all"], version = "^5.3.4" }
-meshtaichi-patcher = "^0.0.19"
-numpy = "^1.24.3"
-pymeshfix = "^0.16.2"
-python = ">=3.11,<3.12"
-pyvista = { extras = ["all"], version = "^0.39.1" }
+matplotlib = "^3.8.0"
+numpy = "^1.26.1"
+opencv-python = "^4.8.1.78"
+pyacvd = "^0.2.9"
+pynrrd = "^1.0.0"
+python = ">=3.10,<3.12"
+pyvista = "^0.42.3"
 taichi = "^1.6.0"
-typer = { extras = ["all"], version = "^0.9.0" }
-requests = "^2.31.0"
+trimesh = { extras = ["all"], version = "^4.0.0" }
+typer = "^0.9.0"
+open3d = "^0.17.0"
 
-[tool.poetry.group.dev.dependencies]
-black = "^23.3.0"
-isort = "^5.12.0"
-pytest = "^7.3.1"
-pytest-cov = "^4.1.0"
+[tool.poetry.scripts]
+te = "taichi_extras.cmd.__main__:app"
+
+[[tool.poetry.source]]
+name = "mirrors"
+priority = "default"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"

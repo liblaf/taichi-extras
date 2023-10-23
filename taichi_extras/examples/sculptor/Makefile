@@ -1,80 +1,65 @@
-TARGET := sculptor
+TARGET := XXX
 
-DATA := $(CURDIR)/data/$(TARGET)
+# TARGET_FILES   += data/$(TARGET)/pre/01-face.ply
+# TARGET_FILES   += data/$(TARGET)/pre/01-skull.ply
+# TARGET_FILES   += data/$(TARGET)/pre/02-face.ply
+# TARGET_FILES   += data/$(TARGET)/pre/02-skull.ply
+# TARGET_FILES   += data/$(TARGET)/pre/03-face.ply
+# TARGET_FILES   += data/$(TARGET)/pre/03-skull.ply
+TEMPLATE_FILES += $(shell echo data/template/{00..03}-{face,skull}.ply)
 
-all: result
+all: $(TARGET_FILES) $(TEMPLATE_FILES)
 
-include $(CURDIR)/make/$(TARGET).mk
+check: data/$(TARGET)/pre/03-face.ply data/$(TARGET)/pre/03-skull.ply
+	- $(TETGEN_CHECK) data/$(TARGET)/pre/03-face.ply
+	- $(TETGEN_CHECK) data/$(TARGET)/pre/03-skull.ply
 
-INNER_END != echo $$(($(NUM_INNER) - 1))
+clean: clean-target clean-template
 
-RAW_OUTER    := $(DATA)/raw/outer.ply
-RAW_INNER    != echo $(DATA)/raw/inner/{00..$(INNER_END)}.ply
-BEFORE_OUTER := $(DATA)/before/outer.ply
-BEFORE_INNER != echo $(DATA)/before/inner/{00..$(INNER_END)}.ply
-TOPOLOGY     := $(DATA)/topology.txt
-BEFORE_ALL   := $(DATA)/before/tet/all.smesh
-BEFORE_TET   != echo $(DATA)/before/tet/all.1.{edge,ele,face,node}
-# AFTER_INNER  :=
-RESULT_TET   != echo $(DATA)/result/tet/all.1.{edge,ele,face,node}
-RESULT_OUTER := $(DATA)/result/outer.ply
-RESULT_INNER != echo $(DATA)/result/inner/{00..$(INNER_END)}.ply
+clean-target:
+	@ $(RM) --verbose $(TARGET_FILES)
+	@ $(RM) --verbose data/$(TARGET)/pre/*.edge
+	@ $(RM) --verbose data/$(TARGET)/pre/*.ele
+	@ $(RM) --verbose data/$(TARGET)/pre/*.face
+	@ $(RM) --verbose data/$(TARGET)/pre/*.node
 
-clean:
-	@ $(RM) --recursive --verbose $(CURDIR)/data
-	@ $(RM) --verbose imgui.ini
-
-pretty: black prettier
-
-FILES += $(RAW_OUTER) $(RAW_INNER)
-FILES += $(BEFORE_OUTER) $(BEFORE_INNER) $(TOPOLOGY) $(BEFORE_ALL) $(BEFORE_TET)
-FILES += $(AFTER_INNER)
-FILES += $(RESULT_TET) $(RESULT_OUTER) $(RESULT_INNER)
-result: $(FILES)
+clean-template:
+	@ $(RM) --verbose $(TEMPLATE_FILES)
 
 #####################
 # Auxiliary Targets #
 #####################
 
-EMPTY:
+CT_TO_MESH   := $(PYTHON) cmd/CT_to_mesh.py
+MESH_FIX     := MeshFix
+PYTHON       := python
+REGISTER     := $(PYTHON) cmd/register.py
+SIMPLIFY     := cp # te mesh simplify --face-count = 100000
+SMOOTH       := $(PYTHON) cmd/smooth.py
+TETGEN       := tetgen -p -Y -q -A -O -z -V
+TETGEN_CHECK := $(TETGEN) -d -N -E -F
 
-black:
-	isort --profile=black $(CURDIR)
-	black $(CURDIR)
+data/$(TARGET)/pre/01-face.ply: data/$(TARGET)/pre/00-CT.nrrd cmd/CT_to_mesh.py
+	$(CT_TO_MESH) --threshold=0.0 $< $@
 
-prettier:
-	prettier --write $(CURDIR)
+data/$(TARGET)/pre/01-skull.ply: data/$(TARGET)/pre/00-CT.nrrd cmd/CT_to_mesh.py
+	$(CT_TO_MESH) --threshold=300.0 $< $@
 
-CMD          := $(CURDIR)/cmd
-CMD_FIX      := python $(CMD)/fix.py --binary --no-join-comp --remove-smallest-components --verbose
-CMD_TOPOLOGY := python $(CMD)/topology.py
-CMD_MERGE    := python $(CMD)/merge.py
-CMD_TETGEN   := tetgen -p -Y -q -O -z -V
-CMD_SIMULATE := python $(CMD)/simulate.py --max-frames=90 --no-show-window # --video-dir=$(DATA)/result
-CMD_SPLIT    := python $(CMD)/split.py
+data/$(TARGET)/pre/02-%.ply: data/$(TARGET)/pre/01-%.ply
+	$(SIMPLIFY) $< $@
 
-$(DATA)/before/%.ply: $(DATA)/raw/%.ply $(CMD)/fix.py
+data/$(TARGET)/pre/03-%.ply: data/$(TARGET)/pre/02-%.ply data/$(TARGET)/pre/02-%.landmark.txt data/template/02-%.ply data/template/02-%.landmark.txt cmd/register.py
+	$(REGISTER) --output=$@ data/template/02-$*.ply $<
+
+data/template/00-%.ply:
 	@ mkdir --parents --verbose $(@D)
-	$(CMD_FIX) $< $@
+	wget --output-document=$@ https://github.com/liblaf/sculptor/raw/main/model/template/$*.ply
 
-$(TOPOLOGY): $(BEFORE_OUTER) $(BEFORE_INNER) $(CMD)/topology.py
-	@ mkdir --parents --verbose $(@D)
-	$(CMD_TOPOLOGY) --output=$@ $(BEFORE_OUTER) $(BEFORE_INNER)
+data/template/01-%.ply: data/template/00-%.ply cmd/template/%.py
+	$(PYTHON) cmd/template/$*.py $< $@
 
-$(BEFORE_ALL): $(BEFORE_OUTER) $(BEFORE_INNER) $(CMD)/merge.py
-	@ mkdir --parents --verbose $(@D)
-	$(CMD_MERGE) --output=$@ $(BEFORE_OUTER) $(BEFORE_INNER)
+data/template/02-%.ply: data/template/01-%.ply
+	$(MESH_FIX) $< $@
 
-$(subst .1.,%,$(BEFORE_TET)): $(BEFORE_ALL)
-	$(CMD_TETGEN) $<
-
-$(DATA)/result/tet/all.1.node: $(TOPOLOGY) $(BEFORE_TET) $(AFTER_INNER) $(CMD)/simulate.py
-	@ mkdir --parents --verbose $(@D)
-	$(CMD_SIMULATE) --topology=$(TOPOLOGY) $(addprefix --inner=, $(AFTER_INNER)) --output=$@ $(DATA)/before/tet/all.1.node
-
-$(DATA)/result/tet/all.1.%: $(DATA)/before/tet/all.1.%
-	@ install -D --mode="u=rw,go=r" --no-target-directory --verbose $< $@
-
-$(subst .,%,$(RESULT_OUTER) $(RESULT_INNER)): $(DATA)/result/tet/all.1.node $(BEFORE_OUTER) $(BEFORE_INNER) $(TOPOLOGY) $(CMD)/split.py
-	@ mkdir --parents --verbose $(DATA)/result/inner
-	$(CMD_SPLIT) --node=$< --topology=$(TOPOLOGY) --output=$(DATA)/result $(BEFORE_OUTER) $(BEFORE_INNER)
+data/template/03-%.ply: data/template/02-%.ply cmd/smooth.py
+	$(SMOOTH) $< $@
