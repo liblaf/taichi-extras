@@ -8,7 +8,7 @@ description = "Simple utils & patches for Taichi"
 license = "MIT"
 name = "taichi-extras"
 readme = "README.md"
-version = "0.1.0"
+version = "0.2.0"
 
 [tool.poetry.dependencies]
 matplotlib = "^3.8.0"
